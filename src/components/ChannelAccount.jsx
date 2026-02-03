@@ -1,0 +1,225 @@
+import { useState, useEffect } from 'react'
+import { getChannelAccount, updateTelegramBot, updateTelegramUser, updateVk } from '../api/lines'
+import Button from './ui/Button'
+import Input from './ui/Input'
+
+function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [credentials, setCredentials] = useState({})
+  const [saving, setSaving] = useState(false)
+
+  // Загружаем существующие настройки
+  useEffect(() => {
+    console.log('ChannelAccount mounted, tenantId:', tenantId, 'lineId:', lineId, 'channelType:', channelType)
+    const loadAccountInfo = async () => {
+      try {
+        setLoading(true)
+        const response = await getChannelAccount(tenantId, lineId) // ← переменная response
+        console.log('Данные аккаунта:', response)
+        
+        // Проверь структуру ответа
+      const phone = response.phone || response.state_json?.phone
+      console.log('Полученный phone:', phone)
+
+      if (phone) {
+        setCredentials({ phone })
+      } else {
+        initEmptyCredentials()
+      }
+
+
+
+      } catch (err) {
+        console.error('Ошибка загрузки:', err)
+        initEmptyCredentials()
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadAccountInfo()
+  }, [tenantId, lineId, channelType])
+
+  const initEmptyCredentials = () => {
+    switch (channelType) {
+      case 'telegram_bot':
+        setCredentials({ bot_token: '', webhook_url: '' })
+        break
+      case 'telegram_user':
+        setCredentials({ phone: '' })
+        break
+      case 'vk':
+        setCredentials({ access_token: '', group_id: '' })
+        break
+      default:
+        setCredentials({})
+    }
+  }
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setCredentials({
+      ...credentials,
+      [name]: value
+    })
+    setError('')
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setSaving(true)
+    setError('')
+    console.log('Отправляемые credentials:', credentials)
+    try {
+      let response
+      switch (channelType) {
+        case 'telegram_bot':
+          response = await updateTelegramBot(tenantId, lineId, credentials)
+          break
+        case 'telegram_user':
+          response = await updateTelegramUser(tenantId, lineId, credentials)
+          break
+        case 'vk':
+          response = await updateVk(tenantId, lineId, credentials)
+          break
+        default:
+          throw new Error('Тип канала не поддерживается')
+      }
+      
+      alert('Настройки сохранены! Канал подключен.')
+      onBack()
+    } catch (err) {
+      console.error('Ошибка при сохранении:', err)
+      console.error('Полная ошибка:', JSON.stringify(err, null, 2))
+      setError(err.response?.data?.detail || err.message || 'Ошибка сохранения')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const renderForm = () => {
+    switch (channelType) {
+      case 'telegram_bot':
+        return (
+          <>
+            <Input
+              label="Токен бота"
+              name="bot_token"
+              value={credentials.bot_token || ''}
+              onChange={handleChange}
+              required
+              placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
+            />
+            <Input
+              label="Webhook URL (опционально)"
+              name="webhook_url"
+              value={credentials.webhook_url || ''}
+              onChange={handleChange}
+              placeholder="https://your-domain.com/webhook"
+            />
+            <div style={{ fontSize: '13px', color: '#666', marginTop: '-10px', marginBottom: '20px' }}>
+              Получите токен у <a href="https://t.me/BotFather" target="_blank" rel="noreferrer">@BotFather</a>
+            </div>
+          </>
+        )
+      
+      case 'telegram_user':
+        return (
+          <>
+            <Input
+              label="Номер телефона"
+              name="phone"
+              value={credentials.phone || ''}
+              onChange={handleChange}
+              required
+              placeholder="+79991234567"
+            />
+            <div style={{ fontSize: '13px', color: '#666', marginTop: '-10px', marginBottom: '20px' }}>
+              Номер телефона с кодом страны. На него придет код подтверждения.
+            </div>
+          </>
+        )
+      
+      case 'vk':
+        return (
+          <>
+            <Input
+              label="Access Token"
+              name="access_token"
+              value={credentials.access_token || ''}
+              onChange={handleChange}
+              required
+              placeholder="vk1.a.abcdef..."
+            />
+            <Input
+              label="ID группы (опционально)"
+              name="group_id"
+              value={credentials.group_id || ''}
+              onChange={handleChange}
+              placeholder="123456789"
+            />
+            <div style={{ fontSize: '13px', color: '#666', marginTop: '-10px', marginBottom: '20px' }}>
+              Получите токен в <a href="https://vk.com/apps?act=manage" target="_blank" rel="noreferrer">настройках приложения VK</a>
+            </div>
+          </>
+        )
+      
+      default:
+        return (
+          <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+            Настройка для этого типа канала пока не реализована
+          </div>
+        )
+    }
+  }
+
+  const getChannelName = () => {
+    switch (channelType) {
+      case 'telegram_bot': return 'Telegram Bot'
+      case 'telegram_user': return 'Telegram User'
+      case 'vk': return 'VK'
+      default: return channelType
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="container" style={{ maxWidth: '500px', margin: '40px auto' }}>
+        <div>Загрузка настроек канала...</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="container" style={{ maxWidth: '500px', margin: '40px auto' }}>
+      <div style={{ marginBottom: '20px' }}>
+        <Button variant="secondary" onClick={onBack} style={{ marginBottom: '16px' }}>
+          ← Назад к линии
+        </Button>
+        
+        <h2>Настройка канала: {getChannelName()}</h2>
+        <p style={{ color: '#666', fontSize: '14px' }}>
+          Введите данные для подключения к {getChannelName()}
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} autoComplete="off">
+        {renderForm()}
+        
+        {error && <div className="error">{error}</div>}
+
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <Button type="submit" variant="success" loading={saving} style={{ flex: 1 }}>
+            Сохранить и подключить
+          </Button>
+          <Button type="button" variant="secondary" onClick={onBack} style={{ flex: 1 }}>
+            Отмена
+          </Button>
+        </div>
+      </form>
+    </div>
+  )
+}
+
+export default ChannelAccount

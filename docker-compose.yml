@@ -1,0 +1,23 @@
+# /frontend/docker-compose.yml
+version: '3.8'
+
+services:
+  frontend:
+    networks:
+      - default
+      - account_dchat_net
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    stdin_open: true
+    tty: true
+
+
+networks:
+  default:
+  account_dchat_net:
+    external: true
