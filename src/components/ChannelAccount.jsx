@@ -9,6 +9,12 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
   const [credentials, setCredentials] = useState({})
   const [saving, setSaving] = useState(false)
 
+  const [showCodeInput, setShowCodeInput] = useState(false)
+  const [code, setCode] = useState('')
+  const [authLoading, setAuthLoading] = useState(false)
+  const [authStep, setAuthStep] = useState('idle')
+
+
   // Загружаем существующие настройки
   useEffect(() => {
     console.log('ChannelAccount mounted, tenantId:', tenantId, 'lineId:', lineId, 'channelType:', channelType)
@@ -98,6 +104,73 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
     }
   }
 
+
+const handleRequestCode = async () => {
+  if (!credentials.phone) {
+    setError('Введите номер телефона')
+    return
+  }
+
+  try {
+    setAuthLoading(true)
+    const response = await fetch('http://127.0.0.1:8000/auth/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: credentials.phone })
+    })
+    
+    if (!response.ok) throw new Error('Ошибка запроса кода')
+    
+    setAuthStep('code_requested')
+    setShowCodeInput(true)
+    alert('Код отправлен в Telegram!')
+  } catch (err) {
+    setError('Ошибка при запросе кода: ' + err.message)
+  } finally {
+    setAuthLoading(false)
+  }
+}
+
+const handleVerifyCode = async () => {
+  if (!code.trim()) {
+    setError('Введите код из Telegram')
+    return
+  }
+
+  try {
+    setAuthLoading(true)
+    
+    const checkResponse = await fetch(
+      `http://127.0.0.1:8000/auth/check?phone=${encodeURIComponent(credentials.phone)}&code=${code}`,
+      { method: 'POST', headers: { 'accept': 'application/json' } }
+    )
+
+    if (!checkResponse.ok) throw new Error('Неверный код')
+    
+    const authData = await checkResponse.json()
+    
+    if (authData.status !== 'authorized') {
+      throw new Error('Авторизация не удалась')
+    }
+
+    const sessionData = {
+      phone: credentials.phone,
+      session_string: authData.session
+    }
+
+    await updateTelegramUser(tenantId, lineId, sessionData)
+    
+    setAuthStep('verified')
+    alert('Аккаунт успешно авторизован!')
+    onBack()
+  } catch (err) {
+    setError('Ошибка проверки кода: ' + err.message)
+  } finally {
+    setAuthLoading(false)
+  }
+}
+
+
   const renderForm = () => {
     switch (channelType) {
       case 'telegram_bot':
@@ -138,6 +211,41 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
             <div style={{ fontSize: '13px', color: '#666', marginTop: '-10px', marginBottom: '20px' }}>
               Номер телефона с кодом страны. На него придет код подтверждения.
             </div>
+
+
+            {!showCodeInput ? (
+              <Button 
+                type="button" 
+                variant="secondary"
+                onClick={handleRequestCode}
+                loading={authLoading}
+                style={{ marginBottom: '16px' }}
+              >
+                Получить код из Telegram
+              </Button>
+            ) : (
+              <div style={{ marginTop: '16px' }}>
+                <Input
+                  type="text"
+                  label="Код из Telegram"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="Введите 5-значный код"
+                  style={{ marginBottom: '12px' }}
+                />
+                <Button 
+                  type="button" 
+                  variant="success"
+                  onClick={handleVerifyCode}
+                  loading={authLoading}
+                >
+                  Подтвердить код
+                </Button>
+              </div>
+            )}
+
+
+
           </>
         )
       

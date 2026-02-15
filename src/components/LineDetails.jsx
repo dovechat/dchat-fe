@@ -45,6 +45,7 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
     try {
       setLoading(true)
       const data = await getLine(tenantId, lineId)
+      console.log('>>> line.connection_state из API:', data.connection_state, typeof data.connection_state)
       setLine(data)
       setEditName(data.name)
     } catch (err) {
@@ -141,6 +142,44 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
       setUpdating(false)
     }
   }
+
+
+
+
+const handleConnectionToggle = async () => {
+  let isConnected = false
+  
+  // DEBUG: что реально лежит в connection_state
+  console.log('>>> typeof line.connection_state:', typeof line.connection_state)
+  console.log('>>> line.connection_state:', line.connection_state)
+  
+  if (line.connection_state) {
+    if (typeof line.connection_state === 'object' && line.connection_state.status === 'connected') {
+      isConnected = true
+    }
+  }
+  
+  const newStatus = isConnected ? 'disconnected' : 'connected'
+  const payload = { connection_state: { status: newStatus } }
+  
+  console.log('>>> Отправляем:', payload)
+  
+  try {
+    setUpdating(true)
+    await updateLine(tenantId, lineId, payload)
+    setLine({ ...line, connection_state: { status: newStatus } })
+    alert('Состояние обновлено!')
+  } catch (err) {
+    console.error('>>> Ошибка:', err.response?.data)
+  } finally {
+    setUpdating(false)
+  }
+}
+
+
+
+
+
 
   if (loading) return <div className="dashboard">Загрузка данных линии...</div>
   if (error) return <div className="dashboard error">{error}</div>
@@ -319,7 +358,7 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
 
         {/* Кнопки управления подключением */}
         <div style={{ marginTop: '20px', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <Button variant="primary">
+          <Button variant="primary" onClick={handleConnectionToggle} loading={updating}>
             {line.connection_state ? 'Переподключить' : 'Подключить'}
           </Button>
           <Button variant="secondary" onClick={() => setConfiguringChannel(true)}>
