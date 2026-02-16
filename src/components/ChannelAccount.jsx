@@ -28,8 +28,9 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
           response = await getChannelAccount(tenantId, lineId)
         } catch (err) {
           if (err.response?.status === 404) {
-            if (isMounted) initEmptyCredentials()
-            return // <- выход, не продолжаем
+            console.log('Аккаунт ещё не создан (нормально)')
+            initEmptyCredentials()
+            return
           }
           throw err
         }
