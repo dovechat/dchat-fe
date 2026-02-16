@@ -17,34 +17,42 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
 
   // Загружаем существующие настройки
   useEffect(() => {
-    console.log('ChannelAccount mounted, tenantId:', tenantId, 'lineId:', lineId, 'channelType:', channelType)
+    let isMounted = true
+    
     const loadAccountInfo = async () => {
       try {
         setLoading(true)
-        const response = await getChannelAccount(tenantId, lineId) // ← переменная response
-        console.log('Данные аккаунта:', response)
         
-        // Проверь структуру ответа
-      const phone = response.phone || response.state_json?.phone
-      console.log('Полученный phone:', phone)
-
-      if (phone) {
-        setCredentials({ phone })
-      } else {
-        initEmptyCredentials()
-      }
-
-
-
+        let response
+        try {
+          response = await getChannelAccount(tenantId, lineId)
+        } catch (err) {
+          if (err.response?.status === 404) {
+            if (isMounted) initEmptyCredentials()
+            return // <- выход, не продолжаем
+          }
+          throw err
+        }
+        
+        if (!isMounted) return
+        
+        if (response) {
+          const phone = response.phone || response.state_json?.phone
+          if (phone) setCredentials({ phone })
+          else initEmptyCredentials()
+        }
+        
       } catch (err) {
         console.error('Ошибка загрузки:', err)
-        initEmptyCredentials()
+        if (isMounted) initEmptyCredentials()
       } finally {
-        setLoading(false)
+        if (isMounted) setLoading(false)
       }
     }
     
     loadAccountInfo()
+    
+    return () => { isMounted = false }
   }, [tenantId, lineId, channelType])
 
   const initEmptyCredentials = () => {

@@ -20,25 +20,33 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
   }, [tenantId, lineId])
 
   useEffect(() => {
-    const loadAccount = async () => {
-
-      console.log('Загружаем account данные...')
-      const data = await getChannelAccount(tenantId, lineId)
-      console.log('Полученные account данные:', data)
-      console.log('Phone из account данных:', data?.phone)
-
-      try {
-        const data = await getChannelAccount(tenantId, lineId)
-        setAccountData(data)
-      } catch (err) {
-        console.log('Не удалось загрузить данные аккаунта:', err)
-      }
+  const loadAccount = async () => {
+    if (!line?.id || !tenantId) return;
+    
+    if (!line.account_id) {
+      console.log('Аккаунт ещё не создан, пропускаем запрос');
+      setAccountData(null);  // ← было setAccount
+      return;
     }
     
-    if (tenantId && lineId) {
-      loadAccount()
+    try {
+      setLoading(true);
+      const data = await getChannelAccount(tenantId, line.id);
+      setAccountData(data);  // ← было setAccount
+    } catch (err) {
+      if (err.response?.status === 404) {
+        console.log('Аккаунт не найден (нормально для новой линии)');
+        setAccountData(null);  // ← было setAccount
+      } else {
+        console.error('Ошибка загрузки аккаунта:', err);
+      }
+    } finally {
+      setLoading(false);
     }
-  }, [tenantId, lineId])
+  };
+  
+  loadAccount();
+}, [tenantId, line?.id, line?.account_id]);
 
 
   const loadLine = async () => {
