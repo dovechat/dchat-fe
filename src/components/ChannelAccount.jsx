@@ -144,8 +144,7 @@ const handleVerifyCode = async () => {
   
     const API_URL = import.meta.env.VITE_TELEGRAM_API_URL || 'http://localhost:8000';
 
-    const checkResponse = await fetch(
-      fetch(`${API_URL}/auth/check?phone=${encodeURIComponent(credentials.phone)}&code=${code}`,
+    const checkResponse = await fetch(`${API_URL}/auth/check?phone=${encodeURIComponent(credentials.phone)}&code=${code}`,
       { method: 'POST', headers: { 'accept': 'application/json' } }
     )
 
