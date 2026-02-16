@@ -113,7 +113,9 @@ const handleRequestCode = async () => {
 
   try {
     setAuthLoading(true)
-    const response = await fetch('http://127.0.0.1:8000/auth/start', {
+    const API_URL = import.meta.env.VITE_TELEGRAM_API_URL || 'http://localhost:8000';
+
+    const response = await fetch(`${API_URL}/auth/start`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ phone: credentials.phone })
