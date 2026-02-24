@@ -1,4 +1,5 @@
 import Button from './ui/Button'
+import MembersList from './MembersList'
 
 function TenantDetails({ tenant, onEdit, onEditBanking, onBack }) {
   return (
@@ -52,7 +53,8 @@ function TenantDetails({ tenant, onEdit, onEditBanking, onBack }) {
         background: 'white', 
         padding: '24px', 
         borderRadius: '12px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        marginBottom: '20px'
       }}>
         <h3 style={{ fontSize: '16px', marginBottom: '16px', borderBottom: '1px solid #e1e4e8', paddingBottom: '8px' }}>
           Банковские реквизиты (RU)
@@ -95,6 +97,16 @@ function TenantDetails({ tenant, onEdit, onEditBanking, onBack }) {
             </Button>
           </div>
         )}
+      </div>
+
+      {/* Сотрудники */}
+      <div style={{ 
+        background: 'white', 
+        padding: '24px', 
+        borderRadius: '12px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+      }}>
+        <MembersList tenantId={tenant.id} />
       </div>
     </div>
   )
