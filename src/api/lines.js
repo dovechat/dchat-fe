@@ -62,3 +62,11 @@ export const updateVk = async (tenantId, lineId, data) => {
   const response = await apiClient.patch(`/api/v1/tenants/${tenantId}/lines/${lineId}/account/vk`, data)
   return response.data
 }
+
+export const updateWhatsAppGreen = async (tenantId, lineId, data) => {
+  const response = await apiClient.post(`/api/v1/tenants/${tenantId}/lines/${lineId}/account/whatsapp-green`, {
+    id_instance: data.idInstance,
+    api_token: data.apiTokenInstance
+  })
+  return response.data
+}

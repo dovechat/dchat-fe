@@ -80,7 +80,7 @@ function CreateLine({ tenantId, onCreated, onCancel }) {
   const channelTypes = [
     { value: 'telegram_bot', label: 'Telegram Bot', icon: '🤖' },
     { value: 'telegram_user', label: 'Telegram User', icon: '👤' },
-    { value: 'whatsapp_qr', label: 'WhatsApp QR', icon: '📱' },
+    { value: 'whatsapp_green', label: 'WhatsApp Green', icon: '📲' },
     { value: 'whatsapp_business', label: 'WhatsApp Business', icon: '💼' },
     { value: 'vk', label: 'VK', icon: '👥' },
   ]

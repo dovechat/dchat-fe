@@ -118,7 +118,7 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
     switch (type) {
       case 'telegram_bot': return 'Telegram Bot'
       case 'telegram_user': return 'Telegram User'
-      case 'whatsapp_qr': return 'WhatsApp QR'
+      case 'whatsapp_green': return 'WhatsApp Green'
       case 'whatsapp_business': return 'WhatsApp Business'
       case 'vk': return 'VK'
       default: return type
@@ -129,7 +129,7 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
     switch (type) {
       case 'telegram_bot': return '🤖'
       case 'telegram_user': return '👤'
-      case 'whatsapp_qr': return '📱'
+      case 'whatsapp_green': return '📱'
       case 'whatsapp_business': return '💼'
       case 'vk': return '👥'
       default: return '📞'

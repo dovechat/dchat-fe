@@ -72,7 +72,7 @@ function CreateTariff({ onCreated, onCancel }) {
           >
             <option value="telegram_bot">Telegram Bot</option>
             <option value="telegram_user">Telegram User</option>
-            <option value="whatsapp_qr">WhatsApp QR</option>
+            <option value="whatsapp_green">WhatsApp Green API</option>
             <option value="whatsapp_business">WhatsApp Business</option>
             <option value="vk">VK</option>
           </select>

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { getChannelAccount, updateTelegramBot, updateTelegramUser, updateVk } from '../api/lines'
+import { getChannelAccount, updateTelegramBot, updateTelegramUser, updateVk, updateWhatsAppGreen } from '../api/lines'
 import Button from './ui/Button'
 import Input from './ui/Input'
+import apiClient from '../api/client'
 
 function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
   const [loading, setLoading] = useState(true)
@@ -13,6 +14,11 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
   const [code, setCode] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
   const [authStep, setAuthStep] = useState('idle')
+  const [qrLoading, setQrLoading] = useState(false)
+  const [qrCode, setQrCode] = useState(null)
+  const [showToken, setShowToken] = useState(false)
+
+
 
 
   // Загружаем существующие настройки
@@ -64,6 +70,12 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
       case 'telegram_user':
         setCredentials({ phone: '' })
         break
+      case 'whatsapp_green':
+        setCredentials({ idInstance: '', apiTokenInstance: '' })
+        break
+      case 'waba':
+        setCredentials({ phone: '' })
+        break
       case 'vk':
         setCredentials({ access_token: '', group_id: '' })
         break
@@ -94,6 +106,9 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
           break
         case 'telegram_user':
           response = await updateTelegramUser(tenantId, lineId, credentials)
+          break
+        case 'whatsapp_green':
+          response = await updateWhatsAppGreen(tenantId, lineId, credentials)
           break
         case 'vk':
           response = await updateVk(tenantId, lineId, credentials)
@@ -182,6 +197,28 @@ const handleVerifyCode = async () => {
   }
 }
 
+const handleGetQR = async () => {
+  if (!credentials.idInstance || !credentials.apiTokenInstance) {
+    setError('Введите ID инстанса и API токен')
+    return
+  }
+
+  try {
+    setQrLoading(true)
+    const response = await apiClient.post(
+      `/api/v1/tenants/${tenantId}/lines/${lineId}/account/whatsapp-green/qr`,
+      {
+        id_instance: credentials.idInstance,
+        api_token: credentials.apiTokenInstance
+      }
+    )
+    setQrCode(response.data.qr)
+  } catch (err) {
+    setError('Ошибка получения QR: ' + err.message)
+  } finally {
+    setQrLoading(false)
+  }
+}
 
   const renderForm = () => {
     switch (channelType) {
@@ -285,6 +322,70 @@ const handleVerifyCode = async () => {
           </>
         )
       
+      case 'whatsapp_green':
+        return (
+          <>
+            <Input
+              label="ID инстанса"
+              name="idInstance"
+              value={credentials.idInstance || ''}
+              onChange={handleChange}
+              required
+              placeholder="1234567890"
+            />
+            <div style={{ position: 'relative' }}>
+              <Input
+                label="API токен"
+                name="apiTokenInstance"
+                type={showToken ? 'text' : 'password'}
+                value={credentials.apiTokenInstance || ''}
+                onChange={handleChange}
+                required
+                placeholder="abc123def456..."
+              />
+              <button
+                type="button"
+                onClick={() => setShowToken(!showToken)}
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '38px',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+              >
+                {showToken ? '👁️' : '👁️‍🗨️'}
+              </button>
+            </div>
+            
+            {!qrCode ? (
+              <Button 
+                type="button" 
+                variant="secondary"
+                onClick={handleGetQR}
+                loading={qrLoading}
+                style={{ marginBottom: '16px' }}
+              >
+                Получить QR
+              </Button>
+            ) : (
+              <div style={{ marginTop: '16px', textAlign: 'center' }}>
+                <img 
+                  src={`data:image/png;base64,${qrCode}`}
+                  alt="WhatsApp QR"
+                  style={{ maxWidth: '300px', marginBottom: '12px' }}
+                />
+                <p style={{ fontSize: '14px', color: '#666' }}>
+                  Отсканируйте в WhatsApp → Связанные устройства
+                </p>
+              </div>
+            )}
+          </>
+        )
+
+
       default:
         return (
           <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
