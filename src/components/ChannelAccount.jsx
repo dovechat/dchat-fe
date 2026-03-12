@@ -4,6 +4,8 @@ import Button from './ui/Button'
 import Input from './ui/Input'
 import apiClient from '../api/client'
 
+
+
 function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -18,7 +20,9 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
   const [qrCode, setQrCode] = useState(null)
   const [showToken, setShowToken] = useState(false)
 
-
+  const [tgQrCode, setTgQrCode] = useState(null)
+  const [tgQrToken, setTgQrToken] = useState(null)
+  const [tgQrLoading, setTgQrLoading] = useState(false)
 
 
   // Загружаем существующие настройки
@@ -176,6 +180,8 @@ const handleVerifyCode = async () => {
     
     const authData = await checkResponse.json()
     
+    console.log("/auth/check authData", authData);
+
     if (authData.status !== 'authorized') {
       throw new Error('Авторизация не удалась')
     }
@@ -220,6 +226,47 @@ const handleGetQR = async () => {
   }
 }
 
+
+
+const handleRequestTgQR = async () => {
+  try {
+    setTgQrLoading(true)
+    const API_URL = import.meta.env.VITE_TELEGRAM_API_URL || 'http://localhost:8000'
+    const response = await fetch(`${API_URL}/auth/qr/start`, { method: 'POST' })
+    if (!response.ok) throw new Error('Ошибка получения QR')
+    const data = await response.json()
+    setTgQrCode(data.qr)
+    setTgQrToken(data.token)
+    pollTgQrStatus(data.token)
+  } catch (err) {
+    setError('Ошибка получения QR: ' + err.message)
+  } finally {
+    setTgQrLoading(false)
+  }
+}
+
+const pollTgQrStatus = async (token) => {
+  const API_URL = import.meta.env.VITE_TELEGRAM_API_URL || 'http://localhost:8000'
+  const interval = setInterval(async () => {
+    try {
+      const response = await fetch(`${API_URL}/auth/qr/status?token=${encodeURIComponent(token)}`)
+      const data = await response.json()
+      if (data.status === 'authorized') {
+        clearInterval(interval)
+        const sessionData = { session_string: data.session }
+        await updateTelegramUser(tenantId, lineId, sessionData)
+        alert('Аккаунт успешно авторизован!')
+        onBack()
+      }
+    } catch (err) {
+      clearInterval(interval)
+      setError('Ошибка проверки QR: ' + err.message)
+    }
+  }, 2000)
+}
+
+
+
   const renderForm = () => {
     switch (channelType) {
       case 'telegram_bot':
@@ -254,7 +301,7 @@ const handleGetQR = async () => {
               name="phone"
               value={credentials.phone || ''}
               onChange={handleChange}
-              required
+              //required
               placeholder="+79991234567"
             />
             <div style={{ fontSize: '13px', color: '#666', marginTop: '-10px', marginBottom: '20px' }}>
@@ -290,6 +337,34 @@ const handleGetQR = async () => {
                 >
                   Подтвердить код
                 </Button>
+              </div>
+            )}
+
+
+
+
+
+
+            {!tgQrCode ? (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={async () => { await handleRequestTgQR(); }}
+                loading={tgQrLoading}
+                style={{ marginBottom: '16px' }}
+              >
+                Войти через QR код
+              </Button>
+            ) : (
+              <div style={{ marginTop: '16px', textAlign: 'center' }}>
+                <img
+                  src={`data:image/png;base64,${tgQrCode}`}
+                  alt="Telegram QR"
+                  style={{ maxWidth: '300px', marginBottom: '12px' }}
+                />
+                <p style={{ fontSize: '14px', color: '#666' }}>
+                  Откройте Telegram → Настройки → Устройства → Подключить устройство
+                </p>
               </div>
             )}
 
