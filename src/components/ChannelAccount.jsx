@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getChannelAccount, updateTelegramBot, updateTelegramUser, updateVk, updateWhatsAppGreen } from '../api/lines'
+import { getChannelAccount, updateTelegramBot, updateTelegramUser, updateVk, updateWhatsAppGreen, updateWaba } from '../api/lines'
 import Button from './ui/Button'
 import Input from './ui/Input'
 import apiClient from '../api/client'
@@ -78,7 +78,7 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
         setCredentials({ idInstance: '', apiTokenInstance: '' })
         break
       case 'waba':
-        setCredentials({ phone: '' })
+        setCredentials({ api_key: '' })
         break
       case 'vk':
         setCredentials({ access_token: '', group_id: '' })
@@ -113,6 +113,9 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
           break
         case 'whatsapp_green':
           response = await updateWhatsAppGreen(tenantId, lineId, credentials)
+          break
+        case 'waba':
+          response = await updateWaba(tenantId, lineId, credentials)
           break
         case 'vk':
           response = await updateVk(tenantId, lineId, credentials)
@@ -220,7 +223,7 @@ const handleGetQR = async () => {
     )
     setQrCode(response.data.qr)
   } catch (err) {
-    setError('Ошибка получения QR: ' + err.message)
+    setError('Ошибка получения QR: ' + err.message + ' ' + response.data.qr)
   } finally {
     setQrLoading(false)
   }
@@ -459,6 +462,25 @@ const pollTgQrStatus = async (token) => {
             )}
           </>
         )
+
+
+
+      case 'waba':
+        return (
+          <>
+            <Input
+              label="API Key"
+              name="api_key"
+              value={credentials.api_key || ''}
+              onChange={handleChange}
+              required
+              placeholder="ваш-360dialog-api-key"
+            />
+            <div style={{ fontSize: '13px', color: '#666', marginTop: '8px' }}>
+              API ключ из 360dialog → настройки номера
+            </div>
+          </>
+        );
 
 
       default:

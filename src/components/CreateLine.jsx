@@ -81,7 +81,7 @@ function CreateLine({ tenantId, onCreated, onCancel }) {
     { value: 'telegram_bot', label: 'Telegram Bot', icon: '🤖' },
     { value: 'telegram_user', label: 'Telegram User', icon: '👤' },
     { value: 'whatsapp_green', label: 'WhatsApp Green', icon: '📲' },
-    { value: 'whatsapp_business', label: 'WhatsApp Business', icon: '💼' },
+    { value: 'waba', label: 'WhatsApp Business', icon: '💼' },
     { value: 'vk', label: 'VK', icon: '👥' },
   ]
 

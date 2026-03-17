@@ -70,3 +70,8 @@ export const updateWhatsAppGreen = async (tenantId, lineId, data) => {
   })
   return response.data
 }
+
+export async function updateWaba(tenantId, lineId, data) {
+  const response = await apiClient.post(`/api/v1/tenants/${tenantId}/lines/${lineId}/account/waba`, data);
+  return response.data;
+}
