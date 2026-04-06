@@ -22,7 +22,7 @@ function Login({ onSwitchToRegister }) {
     try {
       const data = await login(values.email, values.password)
       const serviceUrl = new URLSearchParams(window.location.search).get('service_url')
-      window.location.href = serviceUrl ? `${serviceUrl}?token=${data.access_token}` : '/'
+      window.location.href = serviceUrl ? `${serviceUrl}?token=${data.access_token}` : '/lk/'
     } catch (err) {
       setError(err.response?.data?.detail || err.message || 'Ошибка входа')
     } finally {
