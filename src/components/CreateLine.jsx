@@ -107,15 +107,15 @@ function CreateLine({ tenantId, lineId, existingChannels = [], renewMode = false
           await renewChannel(tenantId, targetLineId, {
             channel_type: channel.value,
             subscription_period: sel.period,
-            amount: tariff ? parseFloat(tariff.price) : 0,
           })
-        } else {
-          await addChannel(tenantId, targetLineId, {
-            channel_type: channel.value,
-            subscription_period: sel.period,
-            is_demo: sel.is_demo,
-          })
-        }
+          } else {
+            const tariff = findTariff(tariffs, channel.value, sel.period)
+            await addChannel(tenantId, targetLineId, {
+              channel_type: channel.value,
+              subscription_period: sel.period,
+              is_demo: sel.is_demo,
+            })
+          }
       }
 
       onCreated(targetLineId)
