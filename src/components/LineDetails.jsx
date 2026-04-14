@@ -365,7 +365,7 @@ const handleToggleConnection = async (channelType) => {
         marginBottom: '20px'
       }}>
         <h3 style={{ fontSize: '16px', marginBottom: '20px', borderBottom: '1px solid #e1e4e8', paddingBottom: '8px' }}>
-          Каналы ++
+          Каналы
         </h3>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
           {accounts.map(account => (
