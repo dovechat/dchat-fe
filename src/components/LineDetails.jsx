@@ -17,6 +17,7 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
   const [accounts, setAccounts] = useState([])
   const [configuringChannel, setConfiguringChannel] = useState(null) // теперь хранит channelType
   const [renewing, setRenewing] = useState(false)
+  const [adding, setAdding] = useState(false)
 
   useEffect(() => {
     loadLine()
@@ -129,7 +130,6 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
       case 'telegram_user': return 'Telegram User'
       case 'whatsapp_green': return 'WhatsApp Green'
       case 'whatsapp_business': return 'WhatsApp Business'
-      case 'vk': return 'VK'
       default: return type
     }
   }
@@ -140,7 +140,6 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
       case 'telegram_user': return '👤'
       case 'whatsapp_green': return '📱'
       case 'whatsapp_business': return '💼'
-      case 'vk': return '👥'
       default: return '📞'
     }
   }
@@ -229,7 +228,21 @@ const handleToggleConnection = async (channelType) => {
       />
     )
   }
-
+  if (adding) {
+    return (
+      <CreateLine
+        tenantId={tenantId}
+        lineId={lineId}
+        existingChannels={accounts}
+        onCreated={async () => {
+          setAdding(false)
+          const data = await getChannelAccount(tenantId, lineId)
+          setAccounts(Array.isArray(data) ? data : [data])
+        }}
+        onCancel={() => setAdding(false)}
+      />
+    )
+  }
   if (configuringChannel) {
     return (
       <ChannelAccount
@@ -352,7 +365,7 @@ const handleToggleConnection = async (channelType) => {
         marginBottom: '20px'
       }}>
         <h3 style={{ fontSize: '16px', marginBottom: '20px', borderBottom: '1px solid #e1e4e8', paddingBottom: '8px' }}>
-          Каналы
+          Каналы ++
         </h3>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
           {accounts.map(account => (
@@ -409,6 +422,36 @@ const handleToggleConnection = async (channelType) => {
               </div>
             </div>
           ))}
+
+
+          {accounts.length < 4 && (
+              <div
+              onClick={() => setAdding(true)}
+              style={{
+                border: '2px dashed #4A90E2',
+                borderRadius: '12px',
+                padding: '12px 20px',
+                flexShrink: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                cursor: 'pointer',
+                color: '#4A90E2',
+                transition: 'background 0.2s',
+                alignSelf: 'flex-start',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = '#f0f7ff'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
+              <span style={{ fontSize: '22px', lineHeight: 1 }}>+</span>
+              <span style={{ fontSize: '12px' }}>Добавить канал</span>
+            </div>
+          )}
+
+
+
         </div>
       </div>
 
