@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
-import { getLine, updateLine, deleteLine, getChannelAccount } from '../api/lines'
+import { getLine, updateLine, deleteLine, getChannelAccount, addChannel, renewChannel, toggleChannelConnection } from '../api/lines'
 import Button from './ui/Button'
 import Input from './ui/Input'
 import ChannelAccount from './ChannelAccount'
+import CreateLine from './CreateLine'
+
 
 function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
   const [line, setLine] = useState(null)
@@ -12,41 +14,48 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
   const [editName, setEditName] = useState('')
   const [updating, setUpdating] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const [configuringChannel, setConfiguringChannel] = useState(false)
-  const [accountData, setAccountData] = useState(null)
+  const [accounts, setAccounts] = useState([])
+  const [configuringChannel, setConfiguringChannel] = useState(null) // теперь хранит channelType
+  const [renewing, setRenewing] = useState(false)
 
   useEffect(() => {
     loadLine()
   }, [tenantId, lineId])
 
   useEffect(() => {
-  const loadAccount = async () => {
-    if (!line?.id || !tenantId) return;
-    
-    if (!line.account_id) {
-      console.log('Аккаунт ещё не создан, пропускаем запрос');
-      setAccountData(null);  // ← было setAccount
-      return;
-    }
-    
-    try {
-      setLoading(true);
-      const data = await getChannelAccount(tenantId, line.id);
-      setAccountData(data);  // ← было setAccount
-    } catch (err) {
-      if (err.response?.status === 404) {
-        console.log('Аккаунт не найден (нормально для новой линии)');
-        setAccountData(null);  // ← было setAccount
-      } else {
-        console.error('Ошибка загрузки аккаунта:', err);
+    const loadAccounts = async () => {
+      if (!line?.id || !tenantId) return
+      try {
+        const data = await getChannelAccount(tenantId, line.id)
+        const arr = Array.isArray(data) ? data : [data]
+        setAccounts(arr.sort((a, b) => a.channel_type.localeCompare(b.channel_type)))
+      } catch (err) {
+        if (err.response?.status !== 404) {
+          console.error('Ошибка загрузки аккаунтов:', err)
+        }
+        setAccounts([])
       }
-    } finally {
-      setLoading(false);
     }
-  };
-  
-  loadAccount();
-}, [tenantId, line?.id, line?.account_id]);
+    loadAccounts()
+  }, [tenantId, line?.id])
+
+
+
+
+  const PROVIDERS = [
+    { type: 'telegram_user', label: 'Telegram User', icon: '👤' },
+    { type: 'telegram_bot', label: 'Telegram Bot', icon: '🤖' },
+    { type: 'whatsapp_green', label: 'WhatsApp Green', icon: '📱' },
+    { type: 'waba', label: 'WABA', icon: '💼' },
+  ]
+
+  const getConnectionStatusStyle = (status) => {
+    switch (status) {
+      case 'connected': return { background: '#d4edda', color: '#155724' }
+      case 'error': return { background: '#f8d7da', color: '#721c24' }
+      default: return { background: '#e2e3e5', color: '#383d41' }
+    }
+  }
 
 
   const loadLine = async () => {
@@ -185,7 +194,14 @@ const handleConnectionToggle = async () => {
 }
 
 
-
+const handleToggleConnection = async (channelType) => {
+  try {
+    const updated = await toggleChannelConnection(tenantId, lineId, channelType)
+    setAccounts(accounts.map(a => a.channel_type === channelType ? updated : a))
+  } catch (err) {
+    console.error(err)
+  }
+}
 
 
 
@@ -195,17 +211,35 @@ const handleConnectionToggle = async () => {
 
   console.log('configuringChannel:', configuringChannel, 'line:', line)
 
-  if (configuringChannel) {
-    console.log('Рендерим LineDetails, accountData:', accountData)
+  if (renewing) {
     return (
-        <ChannelAccount
-          tenantId={tenantId}
-          lineId={lineId}
-          channelType={line.channel_type}
-          onBack={() => setConfiguringChannel(false)}
-        />
-      )
-    }
+      <CreateLine
+        tenantId={tenantId}
+        lineId={lineId}
+        existingChannels={accounts}
+        renewMode={true}
+        onCreated={async () => {
+          console.log('onCreated called')
+          setRenewing(false)
+          const data = await getChannelAccount(tenantId, lineId)
+          console.log('accounts data:', data)
+          setAccounts(Array.isArray(data) ? data : [data])
+        }}
+                onCancel={() => setRenewing(false)}
+      />
+    )
+  }
+
+  if (configuringChannel) {
+    return (
+      <ChannelAccount
+        tenantId={tenantId}
+        lineId={lineId}
+        channelType={configuringChannel}
+        onBack={() => setConfiguringChannel(null)}
+      />
+    )
+  }
 
   return (
     <div className="dashboard">
@@ -289,10 +323,6 @@ const handleConnectionToggle = async () => {
         
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px' }}>
           <div>
-            <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Тип канала</div>
-            <div style={{ fontSize: '15px', fontWeight: '500' }}>{getChannelTypeLabel(line.channel_type)}</div>
-          </div>
-          <div>
             <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>ID линии</div>
             <div style={{ fontSize: '13px', fontFamily: 'monospace', background: '#f5f7fa', padding: '4px 8px', borderRadius: '4px' }}>
               {line.id}
@@ -302,7 +332,7 @@ const handleConnectionToggle = async () => {
           <div>
             <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Номер телефона</div>
             <div style={{ fontSize: '15px', fontWeight: '500' }}>
-              {accountData?.phone || line.connection_state?.phone || 'Не указан'}
+              {line.connection_state?.phone || 'Не указан'}
             </div>
           </div>
 
@@ -310,73 +340,76 @@ const handleConnectionToggle = async () => {
             <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Дата создания</div>
             <div style={{ fontSize: '15px' }}>{formatDate(line.created_at)}</div>
           </div>
-          <div>
-            <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Дата окончания</div>
-            <div style={{ fontSize: '15px', fontWeight: line.expires_at ? '500' : '400' }}>
-              {formatDate(line.expires_at)}
-            </div>
-          </div>
         </div>
       </div>
 
       {/* Состояние подключения */}
-      <div style={{ 
-        background: 'white', 
-        padding: '24px', 
+      <div style={{
+        background: 'white',
+        padding: '24px',
         borderRadius: '12px',
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
         marginBottom: '20px'
       }}>
         <h3 style={{ fontSize: '16px', marginBottom: '20px', borderBottom: '1px solid #e1e4e8', paddingBottom: '8px' }}>
-          Состояние подключения
+          Каналы
         </h3>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-          <div>
-            <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Статус подключения</div>
-            <div style={{ 
-              padding: '8px 16px',
-              borderRadius: '8px',
-              display: 'inline-block',
-              background: line.connection_state ? '#d4edda' : '#f8d7da',
-              color: line.connection_state ? '#155724' : '#721c24',
-              fontWeight: '500'
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+          {accounts.map(account => (
+            <div key={account.id} style={{
+              border: '1px solid #e1e4e8',
+              borderRadius: '12px',
+              padding: '16px',
+              minWidth: '200px',
+              flex: '1'
             }}>
-              {line.connection_state ? 'Подключено' : 'Не подключено'}
-            </div>
-          </div>
-          
-          {line.connection_state && (
-            <div>
-              <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Данные подключения</div>
-              <div style={{ 
-                background: '#f5f7fa', 
-                padding: '12px',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontFamily: 'monospace',
-                maxHeight: '100px',
-                overflow: 'auto'
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '20px' }}>
+                  {PROVIDERS.find(p => p.type === account.channel_type)?.icon}
+                </span>
+                <span style={{ fontWeight: '600' }}>
+                  {PROVIDERS.find(p => p.type === account.channel_type)?.label}
+                </span>
+              </div>
+              <div style={{
+                display: 'inline-block',
+                padding: '4px 10px',
+                borderRadius: '12px',
+                fontSize: '12px',
+                marginBottom: '12px',
+                ...getConnectionStatusStyle(account.connection_status)
               }}>
-                {JSON.stringify(line.connection_state, null, 2)}
+                {account.connection_status === 'connected' ? 'Подключён' :
+                 account.connection_status === 'error' ? 'Ошибка' : 'Отключён'}
+              </div>
+              <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
+                До: <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
+                      {(() => {
+                        if (!account.expires_at) return 'Срок не указан'
+                        const date = new Date(account.expires_at)
+                        const isPast = date < new Date()
+                        return (
+                          <span style={{ color: isPast ? '#721c24' : 'inherit' }}>
+                            {isPast ? 'Истёк: ' : 'Оплачен до: '}
+                            {date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                          </span>
+                        )
+                      })()}
+                    </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <Button variant="primary" size="small"
+                  onClick={() => handleToggleConnection(account.channel_type)}>
+                  {account.connection_status === 'connected' ? 'Отключить' : 'Переподключить'}
+                </Button>
+                <Button variant="secondary" size="small"
+                  onClick={() => setConfiguringChannel(account.channel_type)}>
+                  Настроить канал
+                </Button>
               </div>
             </div>
-          )}
+          ))}
         </div>
-
-        {/* Кнопки управления подключением */}
-        <div style={{ marginTop: '20px', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <Button variant="primary" onClick={handleConnectionToggle} loading={updating}>
-            {line.connection_state ? 'Переподключить' : 'Подключить'}
-          </Button>
-          <Button variant="secondary" onClick={() => setConfiguringChannel(true)}>
-            Настроить канал
-          </Button>
-          <Button variant="secondary">
-            Получить QR-код
-          </Button>
-        </div>
-
       </div>
 
       {/* Действия с линией */}
@@ -391,7 +424,7 @@ const handleConnectionToggle = async () => {
         </h3>
         
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-          <Button variant="primary">
+          <Button variant="primary" onClick={() => setRenewing(true)}>
             Продлить подписку
           </Button>
           <Button 
