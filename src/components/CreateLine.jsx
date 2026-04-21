@@ -216,8 +216,18 @@ function CreateLine({ tenantId, lineId, existingChannels = [], renewMode = false
                         const active = date > new Date()
                         return (
                           <span style={{ fontSize: '12px', color: active ? '#155724' : '#721c24', background: active ? '#d4edda' : '#f8d7da', padding: '2px 8px', borderRadius: '4px' }}>
-                            {active ? `до ${date.toLocaleDateString('ru-RU')}` : `истёк ${date.toLocaleDateString('ru-RU')}`}
-                          </span>
+                            {(() => {
+                              const sel = selections[channel.value]
+                              const t = findTariff(tariffs, channel.value, sel.period)
+                              const days = t?.period_days || 30
+                              const base = date > new Date() ? date : new Date()
+                              const newDate = new Date(base)
+                              newDate.setDate(newDate.getDate() + days)
+                              return isSelected
+                                ? `будет до ${newDate.toLocaleDateString('ru-RU')}`
+                                : active ? `до ${date.toLocaleDateString('ru-RU')}` : `истёк ${date.toLocaleDateString('ru-RU')}`
+                            })()}
+                                                      </span>
                         )
                       })()}
 
@@ -293,11 +303,8 @@ function CreateLine({ tenantId, lineId, existingChannels = [], renewMode = false
                   </div>
                 )
               })}
-
-              {availableChannels.length === 0 && (
-                <div style={{ color: '#666', textAlign: 'center', padding: '16px' }}>
-                  Все доступные провайдеры уже подключены к этой линии
-                </div>
+              {!renewMode && availableChannels.length === 0 && (
+                <div>Все доступные провайдеры уже подключены к этой линии</div>
               )}
             </div>
           )}

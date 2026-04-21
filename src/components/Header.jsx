@@ -37,7 +37,7 @@ function Header({ currentTenant, onNavigate }) {
         </span>
         )}
         <span style={{ fontSize: '13px', color: '#666' }}>{user?.email}</span>
-        <Button variant="danger" onClick={logout} style={{ padding: '6px 12px', fontSize: '13px' }}>
+        <Button variant="danger" onClick={() => { logout(); navigate('/login') }} style={{ padding: '6px 12px', fontSize: '13px' }}>
           Выйти
         </Button>
       </div>

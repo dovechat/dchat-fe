@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
+import { Routes, Route, useNavigate, useParams, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import Login from './components/Login'
 import Register from './components/Register'
@@ -19,278 +20,348 @@ import CreateLine from './components/CreateLine'
 import LineDetails from './components/LineDetails'
 import NotificationHistory from './components/NotificationHistory'
 import NotificationSettings from './components/NotificationSettings'
-
+import ChannelAccount from './components/ChannelAccount'
+import { getChannelAccount } from './api/lines'
+import { useState } from 'react'
 
 function App() {
   const { user, isAuthenticated, logout, loading } = useAuth()
-  const [view, setView] = useState('login')
+  const navigate = useNavigate()
   const [pendingEmail, setPendingEmail] = useState(null)
   const [pendingToken, setPendingToken] = useState(null)
   const [currentTenant, setCurrentTenant] = useState(null)
-  const [editingTenant, setEditingTenant] = useState(null)
-  const [editingTariff, setEditingTariff] = useState(null)
-  const [selectedLine, setSelectedLine] = useState(null)
-  const [creatingLine, setCreatingLine] = useState(false)
+  const [tenantLoading, setTenantLoading] = useState(() => !!localStorage.getItem('token'))
 
-useEffect(() => {
-  if (isAuthenticated) {
-    const token = localStorage.getItem('token')
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]))
-        if (payload.tenant_id) {
-          // Запросим данные тенанта
-          const fetchTenantData = async () => {
-            try {
-              const tenantData = await getTenant(payload.tenant_id)
-              setCurrentTenant(tenantData)
-            } catch (err) {
-              console.error('Ошибка загрузки данных тенанта:', err)
-              setCurrentTenant({ id: payload.tenant_id })
-            }
-          }
-          fetchTenantData()
-        }
-      } catch (e) {
-        console.error('Ошибка декодирования токена:', e)
+  useEffect(() => {
+    if (!isAuthenticated) {
+      if (!localStorage.getItem('token')) {
+        setTenantLoading(false)
       }
+      return
     }
-    setView('tenants')
-  }
-}, [isAuthenticated])
+    const token = localStorage.getItem('token')
+    if (!token) {
+      setTenantLoading(false)
+      return
+    }
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      if (payload.tenant_id) {
+        getTenant(payload.tenant_id)
+          .then(tenantData => setCurrentTenant(tenantData))
+          .catch(() => setCurrentTenant({ id: payload.tenant_id }))
+          .finally(() => setTenantLoading(false))
+      } else {
+        setTenantLoading(false)
+      }
+    } catch (e) {
+      console.error('Ошибка декодирования токена:', e)
+      setTenantLoading(false)
+    }
+  }, [isAuthenticated])
 
-  if (loading) {
-    return <div className="dashboard">Загрузка...</div>
-  }
+  if (loading) return <div className="dashboard">Загрузка...</div>
 
-  // === AUTH VIEWS ===
   if (!isAuthenticated) {
-    const handleRegistered = (email, token) => {
-      setPendingEmail(email)
-      setPendingToken(token)
-      setView('verify')
-    }
-
-    const handleVerified = () => {
-      alert('Email подтверждён! Теперь можете войти.')
-      setPendingEmail(null)
-      setPendingToken(null)
-      setView('login')
-    }
-
-    const handleBackToLogin = () => {
-      setPendingEmail(null)
-      setPendingToken(null)
-      setView('login')
-    }
-
-    if (view === 'verify') {
-      return (
-        <VerifyEmail
-          email={pendingEmail}
-          tempToken={pendingToken}
-          onBack={handleBackToLogin}
-          onVerified={handleVerified}
-        />
-      )
-    }
-
-    if (view === 'register') {
-      return (
-        <Register
-          onSwitchToLogin={() => setView('login')}
-          onRegistered={handleRegistered}
-        />
-      )
-    }
-
-    return <Login onSwitchToRegister={() => setView('register')} />
+    return (
+      <Routes>
+        <Route path="/verify" element={
+          <VerifyEmail
+            email={pendingEmail}
+            tempToken={pendingToken}
+            onBack={() => { setPendingEmail(null); setPendingToken(null); navigate('/login') }}
+            onVerified={() => { setPendingEmail(null); setPendingToken(null); navigate('/login') }}
+          />
+        } />
+        <Route path="/register" element={
+          <Register
+            onSwitchToLogin={() => navigate('/login')}
+            onRegistered={(email, token) => { setPendingEmail(email); setPendingToken(token); navigate('/verify') }}
+          />
+        } />
+        <Route path="/login" element={<Login onSwitchToRegister={() => navigate('/register')} />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    )
   }
 
-  // === HANDLERS ===
   const handleNavigate = (section) => {
-    setView(section)
-    if (section === 'tenants' || section === 'tariffs' || section === 'notifications') {
-      setEditingTenant(null)
-      setEditingTariff(null)
+    const map = {
+      tenants: '/tenants',
+      tariffs: '/tariffs',
+      billing: '/billing',
+      lines: '/lines',
+      notifications: '/notifications',
     }
+    navigate(map[section] || '/tenants')
   }
 
   const handleTenantSelected = async (tenantId) => {
     try {
       const tenantData = await getTenant(tenantId)
       setCurrentTenant(tenantData)
-    } catch (err) {
+    } catch {
       setCurrentTenant({ id: tenantId })
     }
   }
 
-  const handleTenantClick = (tenant) => {
-    setEditingTenant(tenant)
-    setView('view-tenant')
-  }
-
-  const handleEditTenant = (tenant, tab = 'main') => {
-    setEditingTenant({ ...tenant, tab })
-    setView('edit-tenant')
-  }
-
-  const handleTenantCreated = () => {
-    setView('tenants')
-  }
-
-  // === MAIN APP ===
   return (
     <>
       <Header currentTenant={currentTenant} onNavigate={handleNavigate} />
+      <Routes>
+        <Route path="/" element={<Navigate to="/tenants" replace />} />
 
-      {view === 'tariffs' && (
-        <>
-          {editingTariff ? (
-            editingTariff.mode === 'edit' ? (
-              <EditTariff
-                tariff={editingTariff}
-                onSaved={() => {
-                  setEditingTariff(null)
-                  setView('tariffs')
-                }}
-                onCancel={() => {
-                  setEditingTariff(null)
-                  setView('tariffs')
-                }}
+        <Route path="/tenants" element={
+          <TenantList
+            currentTenantId={currentTenant?.id}
+            onTenantClick={(tenant) => navigate(`/tenants/${tenant.id}`)}
+            onCreateClick={() => navigate('/tenants/create')}
+            onTenantSelected={handleTenantSelected}
+          />
+        } />
+        <Route path="/tenants/create" element={
+          <CreateTenant
+            onCreated={() => navigate('/tenants')}
+            onCancel={() => navigate('/tenants')}
+          />
+        } />
+        <Route path="/tenants/:tenantId" element={
+          <TenantDetailsWrapper onTenantSelected={handleTenantSelected} />
+        } />
+        <Route path="/tenants/:tenantId/edit" element={
+          <EditTenantWrapper />
+        } />
+        <Route path="/tenants/:tenantId/banking" element={
+          <BankingWrapper />
+        } />
+
+        <Route path="/tariffs" element={
+          <TariffList
+            onCreateClick={() => navigate('/tariffs/create')}
+            onEditClick={(tariff) => navigate(`/tariffs/${tariff.id}/edit`, { state: { tariff } })}
+          />
+        } />
+        <Route path="/tariffs/create" element={
+          <CreateTariff
+            onCreated={() => navigate('/tariffs')}
+            onCancel={() => navigate('/tariffs')}
+          />
+        } />
+        <Route path="/tariffs/:tariffId/edit" element={
+          <EditTariffWrapper />
+        } />
+
+        <Route path="/billing" element={
+          tenantLoading ? null : currentTenant?.id
+            ? <BillingDashboard tenantId={currentTenant.id} />
+            : <Navigate to="/tenants" replace />
+        } />
+
+        <Route path="/lines" element={
+          tenantLoading ? null : currentTenant?.id
+            ? <LineList
+                tenantId={currentTenant.id}
+                onCreateClick={() => navigate('/lines/create')}
+                onLineClick={(line) => navigate(`/lines/${line.id}`)}
               />
-            ) : (
-              <CreateTariff
-                onCreated={() => {
-                  setEditingTariff(null)
-                  setView('tariffs')
-                }}
-                onCancel={() => {
-                  setEditingTariff(null)
-                  setView('tariffs')
-                }}
+            : <Navigate to="/tenants" replace />
+        } />
+
+        <Route path="/lines/create" element={
+          tenantLoading ? null : currentTenant?.id
+            ? <CreateLine
+                tenantId={currentTenant.id}
+                onCreated={() => navigate('/lines')}
+                onCancel={() => navigate('/lines')}
               />
-            )
-          ) : (
-            <TariffList
-              onCreateClick={() => {
-                setEditingTariff({ mode: 'create' })
-                setView('tariffs')
-              }}
-              onEditClick={(tariff) => {
-                setEditingTariff({ ...tariff, mode: 'edit' })
-                setView('tariffs')
-              }}
-            />
-          )}
-        </>
-      )}
+            : <Navigate to="/tenants" replace />
+        } />
 
-      {view === 'create-tenant' && (
-        <CreateTenant
-          onCreated={handleTenantCreated}
-          onCancel={() => setView('tenants')}
-        />
-      )}
+        <Route path="/lines/:lineId" element={
+          (() => { console.log('lines route:', tenantLoading, currentTenant?.id); return tenantLoading ? null : currentTenant?.id
+            ? <LineDetailsWrapper tenantId={currentTenant.id} />
+            : <Navigate to="/tenants" replace /> })()
+        } />
 
-      {view === 'tenants' && (
-        <TenantList
-          currentTenantId={currentTenant?.id}
-          onTenantClick={handleTenantClick}
-          onCreateClick={() => setView('create-tenant')}
-          onTenantSelected={handleTenantSelected}
-        />
-      )}
+        <Route path="/lines/:lineId/channel/:channelType" element={
+          tenantLoading ? null : currentTenant?.id
+            ? <ChannelAccountWrapper tenantId={currentTenant.id} />
+            : <Navigate to="/tenants" replace />
+        } />
 
-      {view === 'view-tenant' && editingTenant && (
-        <TenantDetails
-          tenant={editingTenant}
-          onEdit={() => {
-            setView('edit-tenant')
-            setEditingTenant({ ...editingTenant, tab: 'main' })
-          }}
-          onEditBanking={() => {
-            setView('edit-tenant')
-            setEditingTenant({ ...editingTenant, tab: 'banking' })
-          }}
-          onBack={() => setView('tenants')}
-        />
-      )}
+        <Route path="/lines/:lineId/renew" element={
+          tenantLoading ? null : currentTenant?.id
+            ? <RenewLineWrapper tenantId={currentTenant.id} />
+            : <Navigate to="/tenants" replace />
+        } />
+
+        <Route path="/lines/:lineId/add-channel" element={
+          tenantLoading ? null : currentTenant?.id
+            ? <AddChannelWrapper tenantId={currentTenant.id} />
+            : <Navigate to="/tenants" replace />
+        } />
 
 
-      {view === 'edit-tenant' && editingTenant && (
-        <>
-          {editingTenant.tab === 'banking' ? (
-            <BankingDetailsRu
-              tenant={editingTenant}
-              onSaved={() => setView('tenants')}
-              onCancel={() => setView('tenants')}
-            />
-          ) : (
-            <EditTenant
-              tenant={editingTenant}
-              onSaved={() => setView('tenants')}
-              onCancel={() => setView('tenants')}
-            />
-          )}
-        </>
-      )}
+        <Route path="/notifications" element={
+          <div style={{ padding: '24px' }}>
+            <NotificationSettings currentTenantId={currentTenant?.id} />
+            <hr style={{ margin: '32px 0' }} />
+            <NotificationHistory currentTenantId={currentTenant?.id} />
+          </div>
+        } />
 
-
-
-      {view === 'billing' && currentTenant?.id && (
-        <BillingDashboard tenantId={currentTenant.id} />
-      )}
-
-
-      {view === 'lines' && currentTenant?.id && (
-        <>
-          {selectedLine ? (
-            <LineDetails
-              tenantId={currentTenant.id}
-              lineId={selectedLine.id}
-              onBack={() => {
-                setSelectedLine(null)
-                setView('lines')
-              }}
-              onDeleted={() => {
-                setSelectedLine(null)
-                setView('lines')
-              }}
-            />
-          ) : creatingLine ? (
-            <CreateLine
-              tenantId={currentTenant.id}
-              onCreated={() => {
-                setCreatingLine(false)
-                setView('lines')
-              }}
-              onCancel={() => {
-                setCreatingLine(false)
-                setView('lines')
-              }}
-            />
-          ) : (
-            <LineList
-              tenantId={currentTenant.id}
-              onCreateClick={() => setCreatingLine(true)}
-              onLineClick={(line) => setSelectedLine(line)}
-            />
-          )}
-        </>
-      )}
-
-      {view === 'notifications' && (
-        <div style={{ padding: '24px' }}>
-          <NotificationSettings currentTenantId={currentTenant?.id} />
-          <hr style={{ margin: '32px 0' }} />
-          <NotificationHistory currentTenantId={currentTenant?.id} />
-        </div>
-      )}
-
-
+        <Route path="*" element={<Navigate to="/tenants" replace />} />
+      </Routes>
     </>
   )
 }
+
+function TenantDetailsWrapper({ onTenantSelected }) {
+  const { tenantId } = useParams()
+  const navigate = useNavigate()
+  const [tenant, setTenant] = useState(null)
+
+  useEffect(() => {
+    getTenant(tenantId).then(t => { setTenant(t); onTenantSelected(tenantId) }).catch(() => {})
+  }, [tenantId])
+
+  if (!tenant) return <div className="dashboard">Загрузка...</div>
+  return (
+    <TenantDetails
+      tenant={tenant}
+      onEdit={() => navigate(`/tenants/${tenantId}/edit`)}
+      onEditBanking={() => navigate(`/tenants/${tenantId}/banking`)}
+      onBack={() => navigate('/tenants')}
+    />
+  )
+}
+
+function EditTenantWrapper() {
+  const { tenantId } = useParams()
+  const navigate = useNavigate()
+  const [tenant, setTenant] = useState(null)
+
+  useEffect(() => {
+    getTenant(tenantId).then(setTenant).catch(() => {})
+  }, [tenantId])
+
+  if (!tenant) return <div className="dashboard">Загрузка...</div>
+  return (
+    <EditTenant
+      tenant={tenant}
+      onSaved={() => navigate('/tenants')}
+      onCancel={() => navigate(`/tenants/${tenantId}`)}
+    />
+  )
+}
+
+function BankingWrapper() {
+  const { tenantId } = useParams()
+  const navigate = useNavigate()
+  const [tenant, setTenant] = useState(null)
+
+  useEffect(() => {
+    getTenant(tenantId).then(setTenant).catch(() => {})
+  }, [tenantId])
+
+  if (!tenant) return <div className="dashboard">Загрузка...</div>
+  return (
+    <BankingDetailsRu
+      tenant={tenant}
+      onSaved={() => navigate('/tenants')}
+      onCancel={() => navigate(`/tenants/${tenantId}`)}
+    />
+  )
+}
+
+function EditTariffWrapper() {
+  const { tariffId } = useParams()
+  const navigate = useNavigate()
+  const { state } = useLocation()
+
+  if (!state?.tariff) return <Navigate to="/tariffs" replace />
+  return (
+    <EditTariff
+      tariff={state.tariff}
+      onSaved={() => navigate('/tariffs')}
+      onCancel={() => navigate('/tariffs')}
+    />
+  )
+}
+
+function LineDetailsWrapper({ tenantId }) {
+  const { lineId } = useParams()
+  const navigate = useNavigate()
+  return (
+    <LineDetails
+      tenantId={tenantId}
+      lineId={lineId}
+      onBack={() => navigate('/lines')}
+      onDeleted={() => navigate('/lines')}
+    />
+  )
+}
+
+function ChannelAccountWrapper({ tenantId }) {
+  const { lineId, channelType } = useParams()
+  const navigate = useNavigate()
+  return (
+    <ChannelAccount
+      tenantId={tenantId}
+      lineId={lineId}
+      channelType={channelType}
+      onBack={() => navigate(`/lines/${lineId}`)}
+    />
+  )
+}
+
+
+
+function RenewLineWrapper({ tenantId }) {
+  const { lineId } = useParams()
+  const navigate = useNavigate()
+  const [accounts, setAccounts] = useState([])
+
+  useEffect(() => {
+    getChannelAccount(tenantId, lineId)
+      .then(data => setAccounts(Array.isArray(data) ? data : [data]))
+      .catch(() => {})
+  }, [lineId])
+
+  return (
+    <CreateLine
+      tenantId={tenantId}
+      lineId={lineId}
+      existingChannels={accounts}
+      renewMode={true}
+      onCreated={() => navigate(`/lines/${lineId}`)}
+      onCancel={() => navigate(`/lines/${lineId}`)}
+    />
+  )
+}
+
+function AddChannelWrapper({ tenantId }) {
+  const { lineId } = useParams()
+  const navigate = useNavigate()
+  const [accounts, setAccounts] = useState([])
+
+  useEffect(() => {
+    getChannelAccount(tenantId, lineId)
+      .then(data => setAccounts(Array.isArray(data) ? data : [data]))
+      .catch(() => {})
+  }, [lineId])
+
+  return (
+    <CreateLine
+      tenantId={tenantId}
+      lineId={lineId}
+      existingChannels={accounts}
+      onCreated={() => navigate(`/lines/${lineId}`)}
+      onCancel={() => navigate(`/lines/${lineId}`)}
+    />
+  )
+}
+
+
 
 export default App

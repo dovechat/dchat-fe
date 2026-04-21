@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getLine, updateLine, deleteLine, getChannelAccount, addChannel, renewChannel, toggleChannelConnection } from '../api/lines'
 import Button from './ui/Button'
 import Input from './ui/Input'
 import ChannelAccount from './ChannelAccount'
 import CreateLine from './CreateLine'
+import apiClient from '../api/client';
 
 
 function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
   const [line, setLine] = useState(null)
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [editing, setEditing] = useState(false)
@@ -15,9 +18,6 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
   const [updating, setUpdating] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [accounts, setAccounts] = useState([])
-  const [configuringChannel, setConfiguringChannel] = useState(null) // теперь хранит channelType
-  const [renewing, setRenewing] = useState(false)
-  const [adding, setAdding] = useState(false)
 
   useEffect(() => {
     loadLine()
@@ -41,7 +41,16 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
   }, [tenantId, line?.id])
 
 
-
+  const handleCleanup = async () => {
+    if (!confirm('Очистить линию? Все каналы будут удалены.')) return;
+    try {
+      await apiClient.post(`/api/v1/tenants/${tenantId}/lines/${line.id}/account/cleanup`);
+      alert('Линия очищена');
+      onBack();
+    } catch {
+      alert('Ошибка очистки');
+    }
+  };
 
   const PROVIDERS = [
     { type: 'telegram_user', label: 'Telegram User', icon: '👤' },
@@ -203,56 +212,10 @@ const handleToggleConnection = async (channelType) => {
 }
 
 
-
   if (loading) return <div className="dashboard">Загрузка данных линии...</div>
   if (error) return <div className="dashboard error">{error}</div>
   if (!line) return <div className="dashboard">Линия не найдена</div>
 
-  console.log('configuringChannel:', configuringChannel, 'line:', line)
-
-  if (renewing) {
-    return (
-      <CreateLine
-        tenantId={tenantId}
-        lineId={lineId}
-        existingChannels={accounts}
-        renewMode={true}
-        onCreated={async () => {
-          console.log('onCreated called')
-          setRenewing(false)
-          const data = await getChannelAccount(tenantId, lineId)
-          console.log('accounts data:', data)
-          setAccounts(Array.isArray(data) ? data : [data])
-        }}
-                onCancel={() => setRenewing(false)}
-      />
-    )
-  }
-  if (adding) {
-    return (
-      <CreateLine
-        tenantId={tenantId}
-        lineId={lineId}
-        existingChannels={accounts}
-        onCreated={async () => {
-          setAdding(false)
-          const data = await getChannelAccount(tenantId, lineId)
-          setAccounts(Array.isArray(data) ? data : [data])
-        }}
-        onCancel={() => setAdding(false)}
-      />
-    )
-  }
-  if (configuringChannel) {
-    return (
-      <ChannelAccount
-        tenantId={tenantId}
-        lineId={lineId}
-        channelType={configuringChannel}
-        onBack={() => setConfiguringChannel(null)}
-      />
-    )
-  }
 
   return (
     <div className="dashboard">
@@ -396,7 +359,7 @@ const handleToggleConnection = async (channelType) => {
                  account.connection_status === 'error' ? 'Ошибка' : 'Отключён'}
               </div>
               <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
-                До: <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
+                <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
                       {(() => {
                         if (!account.expires_at) return 'Срок не указан'
                         const date = new Date(account.expires_at)
@@ -416,7 +379,7 @@ const handleToggleConnection = async (channelType) => {
                   {account.connection_status === 'connected' ? 'Отключить' : 'Переподключить'}
                 </Button>
                 <Button variant="secondary" size="small"
-                  onClick={() => setConfiguringChannel(account.channel_type)}>
+                  onClick={() => navigate(`/lines/${lineId}/channel/${account.channel_type}`)}>
                   Настроить канал
                 </Button>
               </div>
@@ -426,7 +389,7 @@ const handleToggleConnection = async (channelType) => {
 
           {accounts.length < 4 && (
               <div
-              onClick={() => setAdding(true)}
+              onClick={() => navigate(`/lines/${lineId}/add-channel`)}
               style={{
                 border: '2px dashed #4A90E2',
                 borderRadius: '12px',
@@ -466,24 +429,20 @@ const handleToggleConnection = async (channelType) => {
           Действия с линией
         </h3>
         
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-          <Button variant="primary" onClick={() => setRenewing(true)}>
-            Продлить подписку
-          </Button>
-          <Button 
-            variant={line.status === 'active' ? 'secondary' : 'success'}
-            onClick={toggleLineStatus}
-            loading={updating}
-          >
-            {line.status === 'active' ? 'Отключить' : 'Включить'}
-          </Button>
-          <Button variant="secondary">
-            Экспорт диалогов
-          </Button>
-          <Button variant="secondary">
-            Статистика
-          </Button>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+          {[
+            <Button variant="primary" onClick={() => navigate(`/lines/${lineId}/renew`)}>Продлить подписку</Button>,
+            <Button variant={line.status === 'active' ? 'secondary' : 'success'} onClick={toggleLineStatus} loading={updating}>
+              {line.status === 'active' ? 'Отключить' : 'Включить'}
+            </Button>,
+            <Button variant="secondary">Экспорт диалогов</Button>,
+            <Button variant="danger" onClick={handleCleanup}>Очистить линию</Button>,
+          ].map((btn, i) => (
+            <div key={i} style={{ display: 'inline-block' }}>{btn}</div>
+          ))}
         </div>
+
+
       </div>
     </div>
   )

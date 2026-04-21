@@ -270,6 +270,41 @@ const pollTgQrStatus = async (token) => {
 
 
 
+const handleConnectInstance = async () => {
+  try {
+    setQrLoading(true)
+    const response = await apiClient.post(
+      `/api/v1/tenants/${tenantId}/lines/${lineId}/account/whatsapp-green/connect`
+    )
+    setQrCode(response.data.qr.qr)
+    await updateWhatsAppGreen(tenantId, lineId, {})
+    pollGreenStatus()
+  } catch (err) {
+    setError('Ошибка подключения: ' + err.message)
+  } finally {
+    setQrLoading(false)
+  }
+}
+
+const pollGreenStatus = () => {
+  const interval = setInterval(async () => {
+    try {
+      const accounts = await getChannelAccount(tenantId, lineId)
+      const account = Array.isArray(accounts)
+        ? accounts.find(a => a.channel_type === 'whatsapp_green')
+        : accounts
+      if (account?.connection_status === 'connected') {
+        clearInterval(interval)
+        onBack()
+      }
+    } catch {
+      clearInterval(interval)
+    }
+  }, 2000)
+}
+
+
+
   const renderForm = () => {
     switch (channelType) {
       case 'telegram_bot':
@@ -403,51 +438,17 @@ const pollTgQrStatus = async (token) => {
       case 'whatsapp_green':
         return (
           <>
-            <Input
-              label="ID инстанса"
-              name="idInstance"
-              value={credentials.idInstance || ''}
-              onChange={handleChange}
-              required
-              placeholder="1234567890"
-            />
-            <div style={{ position: 'relative' }}>
-              <Input
-                label="API токен"
-                name="apiTokenInstance"
-                type={showToken ? 'text' : 'password'}
-                value={credentials.apiTokenInstance || ''}
-                onChange={handleChange}
-                required
-                placeholder="abc123def456..."
-              />
-              <button
-                type="button"
-                onClick={() => setShowToken(!showToken)}
-                style={{
-                  position: 'absolute',
-                  right: '10px',
-                  top: '38px',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '14px'
-                }}
-              >
-                {showToken ? '👁️' : '👁️‍🗨️'}
-              </button>
-            </div>
-            
             {!qrCode ? (
-              <Button 
-                type="button" 
-                variant="secondary"
-                onClick={handleGetQR}
-                loading={qrLoading}
-                style={{ marginBottom: '16px' }}
-              >
-                Получить QR
+              <div style={{ marginBottom: '20px' }}>
+                <Button 
+                  type="button" 
+                  variant="secondary"
+                  onClick={handleConnectInstance}
+                  loading={qrLoading}
+                >
+                  Подключить инстанс
               </Button>
+              </div>
             ) : (
               <div style={{ marginTop: '16px', textAlign: 'center' }}>
                 <img 
@@ -461,7 +462,7 @@ const pollTgQrStatus = async (token) => {
               </div>
             )}
           </>
-        )
+        );
 
 
 
@@ -527,14 +528,38 @@ const pollTgQrStatus = async (token) => {
         
         {error && <div className="error">{error}</div>}
 
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <Button type="submit" variant="success" loading={saving} style={{ flex: 1 }}>
+      <div style={{ display: 'flex', gap: '12px', height: '40px', width: '100%', alignItems: 'stretch' }}>
+        {channelType !== 'whatsapp_green' && (
+          <Button type="submit" variant="success" loading={saving} 
+            style={{ 
+              flex: 1, 
+              height: '40px', 
+              padding: '0', 
+              boxSizing: 'border-box',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minWidth: 0,
+              margin: 0
+            }}>
             Сохранить и подключить
           </Button>
-          <Button type="button" variant="secondary" onClick={onBack} style={{ flex: 1 }}>
-            Отмена
-          </Button>
-        </div>
+        )}
+        <Button type="button" variant="secondary" onClick={onBack} 
+          style={{ 
+            flex: 1, 
+            height: '40px', 
+            padding: '0', 
+            boxSizing: 'border-box',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minWidth: 0,
+            margin: 0
+          }}>
+          Отмена
+        </Button>
+      </div>
       </form>
     </div>
   )

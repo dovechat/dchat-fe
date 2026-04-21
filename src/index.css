@@ -148,7 +148,7 @@ h2 {
 .btn-secondary {
   background: #95a5a6;
   color: white;
-  margin-top: 8px;
+  /* margin-top: 8px; */
 }
 
 .btn-secondary:hover:not(:disabled) {

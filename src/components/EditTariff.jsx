@@ -5,6 +5,9 @@ import Button from './ui/Button'
 
 function EditTariff({ tariff, onSaved, onCancel }) {
   const [values, setValues] = useState({
+    name: tariff.name || '',
+    channel_type: tariff.channel_type || 'telegram_bot',
+    period_days: tariff.period_days || 30,
     price: tariff.price || '',
     is_active: tariff.is_active !== undefined ? tariff.is_active : true,
   })
@@ -16,6 +19,7 @@ function EditTariff({ tariff, onSaved, onCancel }) {
     setValues({
       ...values,
       [name]: type === 'checkbox' ? checked : 
+              name === 'period_days' ? parseInt(value) || 0 :
               name === 'price' ? parseFloat(value) || '' : value,
     })
     setError('')
@@ -41,18 +45,50 @@ function EditTariff({ tariff, onSaved, onCancel }) {
     <div className="container" style={{ maxWidth: '500px', margin: '40px auto' }}>
       <h2>Редактировать тариф</h2>
       
-      <p style={{ fontSize: '13px', color: '#666', marginBottom: '20px' }}>
-        Тариф: <strong>{tariff.name}</strong> ({tariff.channel_type}, {tariff.period_days} дней)
-      </p>
 
       <form onSubmit={onSubmit} autoComplete="off">
-        <div style={{ marginBottom: '16px', padding: '12px', background: '#f5f7fa', borderRadius: '8px' }}>
-          <div style={{ fontSize: '13px', color: '#666' }}>
-            <div><strong>Название:</strong> {tariff.name}</div>
-            <div><strong>Тип канала:</strong> {tariff.channel_type}</div>
-            <div><strong>Период:</strong> {tariff.period_days} дней</div>
-          </div>
+
+<Input
+          label="Название тарифа"
+          type="text"
+          name="name"
+          value={values.name}
+          onChange={handleChange}
+          required
+          placeholder="Базовый тариф"
+        />
+
+        <div className="form-group">
+          <label>Тип канала</label>
+          <select
+            name="channel_type"
+            value={values.channel_type}
+            onChange={handleChange}
+            style={{
+              width: '100%',
+              padding: '10px 12px',
+              border: '1.5px solid #e1e4e8',
+              borderRadius: '8px',
+              fontSize: '14px',
+            }}
+          >
+            <option value="telegram_bot">Telegram Bot</option>
+            <option value="telegram_user">Telegram User</option>
+            <option value="whatsapp_green">WhatsApp Green API</option>
+            <option value="waba">WhatsApp Business</option>
+            <option value="vk">VK</option>
+          </select>
         </div>
+
+        <Input
+          label="Период (дней)"
+          type="number"
+          name="period_days"
+          value={values.period_days}
+          onChange={handleChange}
+          required
+          min="1"
+        />
 
         <Input
           label="Цена (₽)"
