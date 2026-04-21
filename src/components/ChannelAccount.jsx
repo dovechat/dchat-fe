@@ -249,8 +249,20 @@ const handleRequestTgQR = async () => {
 }
 
 const pollTgQrStatus = async (token) => {
+  if (!token || token === 'undefined') {
+    setError('Ошибка получения токена QR')
+    return
+  }
+  let attempts = 0
   const API_URL = import.meta.env.VITE_TELEGRAM_API_URL || 'http://localhost:8000'
   const interval = setInterval(async () => {
+    attempts++
+    if (attempts > 5) {
+      clearInterval(interval)
+      setError('Время ожидания QR истекло')
+      setTgQrCode(null)
+      return
+    }
     try {
       const response = await fetch(`${API_URL}/auth/qr/status?token=${encodeURIComponent(token)}`)
       const data = await response.json()
@@ -265,9 +277,8 @@ const pollTgQrStatus = async (token) => {
       clearInterval(interval)
       setError('Ошибка проверки QR: ' + err.message)
     }
-  }, 2000)
+  }, 3000)
 }
-
 
 
 const handleConnectInstance = async () => {
