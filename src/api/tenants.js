@@ -1,12 +1,12 @@
 import apiClient from './client'
 
-// Получить список тенантов пользователя
+// Получить список компаний пользователя
 export const getTenants = async () => {
   const response = await apiClient.get('/api/v1/tenant/')
   return response.data
 }
 
-// Создать тенант
+// Создать компанию
 export const createTenant = async (data) => {
   const response = await apiClient.post('/api/v1/tenant/create', {
     name: data.name,
@@ -17,25 +17,25 @@ export const createTenant = async (data) => {
   return response.data
 }
 
-// Получить тенант по ID
+// Получить компанию по ID
 export const getTenant = async (tenantId) => {
   const response = await apiClient.get(`/api/v1/tenant/${tenantId}`)
   return response.data
 }
 
-// Обновить тенант
+// Обновить компанию
 export const updateTenant = async (tenantId, data) => {
   const response = await apiClient.patch(`/api/v1/tenant/${tenantId}`, data)
   return response.data
 }
 
-// Удалить тенант
+// Удалить компанию
 export const deleteTenant = async (tenantId) => {
   const response = await apiClient.delete(`/api/v1/tenant/${tenantId}`)
   return response.data
 }
 
-// Switch tenant (переключиться на тенант) - ИСПРАВЛЕНО
+// Switch tenant (переключиться на компанию) - ИСПРАВЛЕНО
 export const switchTenant = async (tenantId) => {
   console.log('switchTenant called with:', tenantId) // DEBUG
   

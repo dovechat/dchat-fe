@@ -234,8 +234,11 @@ const handleGetQR = async () => {
 const handleRequestTgQR = async () => {
   try {
     setTgQrLoading(true)
-    const API_URL = import.meta.env.VITE_TELEGRAM_API_URL || 'http://localhost:8000'
-    const response = await fetch(`${API_URL}/auth/qr/start`, { method: 'POST' })
+    const API_URL =
+      import.meta.env.VITE_TELEGRAM_API_URL || 'http://localhost:8000'
+    const response = await fetch(`${API_URL}/auth/qr/start`, {
+      method: 'POST'
+    })
     if (!response.ok) throw new Error('Ошибка получения QR')
     const data = await response.json()
     setTgQrCode(data.qr)
@@ -254,24 +257,31 @@ const pollTgQrStatus = async (token) => {
     return
   }
   let attempts = 0
-  const API_URL = import.meta.env.VITE_TELEGRAM_API_URL || 'http://localhost:8000'
+  const API_URL =
+    import.meta.env.VITE_TELEGRAM_API_URL || 'http://localhost:8000'
   const interval = setInterval(async () => {
     attempts++
-    if (attempts > 5) {
-      clearInterval(interval)
-      setError('Время ожидания QR истекло')
-      setTgQrCode(null)
-      return
-    }
     try {
-      const response = await fetch(`${API_URL}/auth/qr/status?token=${encodeURIComponent(token)}`)
+      const response = await fetch(
+        `${API_URL}/auth/qr/status?token=${encodeURIComponent(token)}`
+      )
       const data = await response.json()
       if (data.status === 'authorized') {
         clearInterval(interval)
-        const sessionData = { session_string: data.session }
+        const sessionData = {
+          session_string: data.session
+        }
         await updateTelegramUser(tenantId, lineId, sessionData)
         alert('Аккаунт успешно авторизован!')
         onBack()
+        return
+      }
+      if (attempts > 15) {
+        clearInterval(interval)
+        setTgQrCode(null)
+        setTgQrToken(null)
+        handleRequestTgQR()  // восстановил старое имя
+        return
       }
     } catch (err) {
       clearInterval(interval)
@@ -289,7 +299,7 @@ const handleConnectInstance = async () => {
     )
     setQrCode(response.data.qr.qr)
     await updateWhatsAppGreen(tenantId, lineId, {})
-    pollGreenStatus()
+    setTimeout(() => pollGreenStatus(), 5000)
   } catch (err) {
     setError('Ошибка подключения: ' + err.message)
   } finally {

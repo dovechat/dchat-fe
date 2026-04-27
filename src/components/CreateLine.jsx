@@ -39,7 +39,7 @@ function findTariff(tariffs, channelType, period) {
 function CreateLine({ tenantId, lineId, existingChannels = [], renewMode = false, onCreated, onCancel }) {
   const isAddMode = Boolean(lineId)
 
-  const [name, setName] = useState('')
+  const [name, setName] = useState(() => parseInt(crypto.randomUUID().slice(-12), 16).toString().slice(-7))
   const [tariffs, setTariffs] = useState([])
   const [loadingTariffs, setLoadingTariffs] = useState(true)
   const [selections, setSelections] = useState(buildInitialSelections)
@@ -87,6 +87,7 @@ function CreateLine({ tenantId, lineId, existingChannels = [], renewMode = false
 
   const onSubmit = async (e) => {
     e.preventDefault()
+    console.log('onSubmit called', { canSubmit, selectedChannels })
     if (!canSubmit) return
 
     setLoading(true)
@@ -118,7 +119,27 @@ function CreateLine({ tenantId, lineId, existingChannels = [], renewMode = false
           }
       }
 
-      onCreated(targetLineId)
+
+
+
+
+
+      // onCreated(targetLineId)
+
+
+
+      const orderLines = selectedChannels.map(channel => {
+        const sel = selections[channel.value]
+        const tariff = findTariff(tariffs, channel.value, sel.period)
+        return { channelType: channel.value, period: sel.period, price: tariff?.price ?? 0 }
+      })
+      const totalAmount = orderLines.reduce((sum, l) => sum + Number(l.price), 0)
+      onCreated({ lineId: targetLineId, lineName: name, channels: orderLines, amount: totalAmount })
+
+
+
+
+
     } catch (err) {
       setError(err.message)
     } finally {
@@ -283,6 +304,7 @@ function CreateLine({ tenantId, lineId, existingChannels = [], renewMode = false
                         )}
 
                         {/* Демо */}
+                        {/*
                         <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', color: '#555' }}>
                           <input
                             type="checkbox"
@@ -291,6 +313,7 @@ function CreateLine({ tenantId, lineId, existingChannels = [], renewMode = false
                           />
                           Демо-режим (бесплатно, 7 дней, с ограничениями)
                         </label>
+                        */}
 
                         {/* Предупреждение если нет тарифа */}
                         {!sel.is_demo && !findTariff(tariffs, channel.value, sel.period) && (

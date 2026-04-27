@@ -26,7 +26,7 @@ function EditTenant({ tenant, onSaved, onCancel }) {
 
     try {
       const updated = await updateTenant(tenant.id, values)
-      alert('Тенант обновлён!')
+      alert('Компания обновлена!')
       onSaved(updated)
     } catch (err) {
       setError(err.message)
@@ -37,11 +37,11 @@ function EditTenant({ tenant, onSaved, onCancel }) {
 
   return (
     <div className="container" style={{ maxWidth: '500px', margin: '40px auto' }}>
-      <h2>Редактировать тенант</h2>
+      <h2>Редактировать компанию</h2>
 
       <form onSubmit={onSubmit} autoComplete="off">
         <Input
-          label="Название тенанта"
+          label="Название компании"
           type="text"
           name="name"
           value={values.name}

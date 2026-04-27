@@ -2,7 +2,7 @@ import apiClient from './client'
 
 // ============ Notification Settings ============
 
-// Получить все настройки уведомлений тенанта
+// Получить все настройки уведомлений компании
 export const getNotificationSettings = async (tenantId) => {
   const response = await apiClient.get(`/api/v1/tenants/${tenantId}/notifications/settings`)
   return response.data

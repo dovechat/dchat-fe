@@ -1,6 +1,6 @@
 import apiClient from './client'
 
-// Получить список линий тенанта
+// Получить список линий компании
 export const getLines = async (tenantId) => {
   const response = await apiClient.get(`/api/v1/tenants/${tenantId}/lines/`)
   return response.data

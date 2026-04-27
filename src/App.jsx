@@ -22,6 +22,7 @@ import NotificationHistory from './components/NotificationHistory'
 import NotificationSettings from './components/NotificationSettings'
 import ChannelAccount from './components/ChannelAccount'
 import { getChannelAccount } from './api/lines'
+import PaymentFormWrapper from './components/PaymentFormWrapper'
 import { useState } from 'react'
 
 function App() {
@@ -110,7 +111,6 @@ function App() {
       <Header currentTenant={currentTenant} onNavigate={handleNavigate} />
       <Routes>
         <Route path="/" element={<Navigate to="/tenants" replace />} />
-
         <Route path="/tenants" element={
           <TenantList
             currentTenantId={currentTenant?.id}
@@ -134,7 +134,6 @@ function App() {
         <Route path="/tenants/:tenantId/banking" element={
           <BankingWrapper />
         } />
-
         <Route path="/tariffs" element={
           <TariffList
             onCreateClick={() => navigate('/tariffs/create')}
@@ -150,13 +149,11 @@ function App() {
         <Route path="/tariffs/:tariffId/edit" element={
           <EditTariffWrapper />
         } />
-
         <Route path="/billing" element={
           tenantLoading ? null : currentTenant?.id
             ? <BillingDashboard tenantId={currentTenant.id} />
             : <Navigate to="/tenants" replace />
         } />
-
         <Route path="/lines" element={
           tenantLoading ? null : currentTenant?.id
             ? <LineList
@@ -166,42 +163,40 @@ function App() {
               />
             : <Navigate to="/tenants" replace />
         } />
-
         <Route path="/lines/create" element={
           tenantLoading ? null : currentTenant?.id
             ? <CreateLine
                 tenantId={currentTenant.id}
-                onCreated={() => navigate('/lines')}
+                onCreated={(order) => navigate(`/lines/${order.lineId}/payment`, { state: order })}
                 onCancel={() => navigate('/lines')}
               />
             : <Navigate to="/tenants" replace />
         } />
-
         <Route path="/lines/:lineId" element={
           (() => { console.log('lines route:', tenantLoading, currentTenant?.id); return tenantLoading ? null : currentTenant?.id
             ? <LineDetailsWrapper tenantId={currentTenant.id} />
             : <Navigate to="/tenants" replace /> })()
         } />
-
         <Route path="/lines/:lineId/channel/:channelType" element={
           tenantLoading ? null : currentTenant?.id
             ? <ChannelAccountWrapper tenantId={currentTenant.id} />
             : <Navigate to="/tenants" replace />
         } />
-
         <Route path="/lines/:lineId/renew" element={
           tenantLoading ? null : currentTenant?.id
             ? <RenewLineWrapper tenantId={currentTenant.id} />
             : <Navigate to="/tenants" replace />
         } />
-
         <Route path="/lines/:lineId/add-channel" element={
           tenantLoading ? null : currentTenant?.id
             ? <AddChannelWrapper tenantId={currentTenant.id} />
             : <Navigate to="/tenants" replace />
         } />
-
-
+        <Route path="/lines/:lineId/payment" element={
+          tenantLoading ? null : currentTenant?.id
+            ? <PaymentFormWrapper tenantId={currentTenant.id} />
+            : <Navigate to="/tenants" replace />
+        } />
         <Route path="/notifications" element={
           <div style={{ padding: '24px' }}>
             <NotificationSettings currentTenantId={currentTenant?.id} />
@@ -209,7 +204,6 @@ function App() {
             <NotificationHistory currentTenantId={currentTenant?.id} />
           </div>
         } />
-
         <Route path="*" element={<Navigate to="/tenants" replace />} />
       </Routes>
     </>
@@ -220,11 +214,9 @@ function TenantDetailsWrapper({ onTenantSelected }) {
   const { tenantId } = useParams()
   const navigate = useNavigate()
   const [tenant, setTenant] = useState(null)
-
   useEffect(() => {
     getTenant(tenantId).then(t => { setTenant(t); onTenantSelected(tenantId) }).catch(() => {})
   }, [tenantId])
-
   if (!tenant) return <div className="dashboard">Загрузка...</div>
   return (
     <TenantDetails
@@ -240,11 +232,9 @@ function EditTenantWrapper() {
   const { tenantId } = useParams()
   const navigate = useNavigate()
   const [tenant, setTenant] = useState(null)
-
   useEffect(() => {
     getTenant(tenantId).then(setTenant).catch(() => {})
   }, [tenantId])
-
   if (!tenant) return <div className="dashboard">Загрузка...</div>
   return (
     <EditTenant
@@ -259,11 +249,9 @@ function BankingWrapper() {
   const { tenantId } = useParams()
   const navigate = useNavigate()
   const [tenant, setTenant] = useState(null)
-
   useEffect(() => {
     getTenant(tenantId).then(setTenant).catch(() => {})
   }, [tenantId])
-
   if (!tenant) return <div className="dashboard">Загрузка...</div>
   return (
     <BankingDetailsRu
@@ -278,7 +266,6 @@ function EditTariffWrapper() {
   const { tariffId } = useParams()
   const navigate = useNavigate()
   const { state } = useLocation()
-
   if (!state?.tariff) return <Navigate to="/tariffs" replace />
   return (
     <EditTariff
@@ -315,19 +302,15 @@ function ChannelAccountWrapper({ tenantId }) {
   )
 }
 
-
-
 function RenewLineWrapper({ tenantId }) {
   const { lineId } = useParams()
   const navigate = useNavigate()
   const [accounts, setAccounts] = useState([])
-
   useEffect(() => {
     getChannelAccount(tenantId, lineId)
       .then(data => setAccounts(Array.isArray(data) ? data : [data]))
       .catch(() => {})
   }, [lineId])
-
   return (
     <CreateLine
       tenantId={tenantId}
@@ -344,13 +327,11 @@ function AddChannelWrapper({ tenantId }) {
   const { lineId } = useParams()
   const navigate = useNavigate()
   const [accounts, setAccounts] = useState([])
-
   useEffect(() => {
     getChannelAccount(tenantId, lineId)
       .then(data => setAccounts(Array.isArray(data) ? data : [data]))
       .catch(() => {})
   }, [lineId])
-
   return (
     <CreateLine
       tenantId={tenantId}
@@ -361,7 +342,5 @@ function AddChannelWrapper({ tenantId }) {
     />
   )
 }
-
-
 
 export default App

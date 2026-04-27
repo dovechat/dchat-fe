@@ -60,7 +60,7 @@ function MembersList({ tenantId }) {
       setExpandedMember(userId)
       setLoadingLines(true)
       try {
-        // Загружаем все линии тенанта
+        // Загружаем все линии компании
         const lines = await getLines(tenantId)
         setAllLines(lines)
         

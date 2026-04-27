@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
-import { getLines } from '../api/lines'
+import { getLines, updateLine } from '../api/lines'
 import Button from './ui/Button'
 
 function LineList({ tenantId, onCreateClick, onLineClick }) {
   const [lines, setLines] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [editingId, setEditingId] = useState(null)
+  const [editingName, setEditingName] = useState('')
 
   useEffect(() => {
     if (tenantId) {
@@ -102,7 +104,22 @@ function LineList({ tenantId, onCreateClick, onLineClick }) {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                    <h3 style={{ margin: 0, fontSize: '16px' }}>{line.name}</h3>
+                    <h3 style={{ margin: 0, fontSize: '16px' }}>
+
+{editingId === line.id ? (
+  <form onSubmit={async (e) => {
+    e.preventDefault()
+    await updateLine(tenantId, line.id, { name: editingName })
+    setEditingId(null)
+    loadLines()
+  }} onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: '8px' }}>
+    <input autoFocus value={editingName} onChange={e => setEditingName(e.target.value)} style={{ fontSize: '16px', padding: '2px 6px', borderRadius: '6px', border: '1px solid #4A90E2' }} />
+    <Button type="submit" variant="success">OK</Button>
+    <Button type="button" variant="secondary" onClick={() => setEditingId(null)}>✕</Button>
+  </form>
+) : line.name}
+
+                    </h3>
                     <span style={{
                       padding: '2px 8px',
                       borderRadius: '12px',
@@ -171,6 +188,17 @@ function LineList({ tenantId, onCreateClick, onLineClick }) {
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+
+<Button variant="primary" onClick={(e) => {
+  e.stopPropagation()
+  setEditingId(line.id)
+  setEditingName(line.name)
+}}>
+  Переименовать
+</Button>
+
+
                   <Button variant="primary" onClick={(e) => {
                     e.stopPropagation()
                     onLineClick(line)
