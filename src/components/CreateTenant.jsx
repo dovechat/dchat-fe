@@ -36,11 +36,11 @@ function CreateTenant({ onCreated, onCancel }) {
 
   return (
     <div className="container" style={{ maxWidth: '500px', margin: '40px auto' }}>
-      <h2>Создать тенант</h2>
+      <h2>Создать компанию</h2>
 
       <form onSubmit={onSubmit} autoComplete="off">
         <Input
-          label="Название тенанта"
+          label="Название компании"
           type="text"
           name="name"
           value={values.name}

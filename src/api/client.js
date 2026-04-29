@@ -28,6 +28,9 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Если сервер не отвечает (Network Error), пробуем вернуть моковые данные в вызывающей функции
+    // или здесь, если мы хотим глобальный мок. Но лучше в конкретных API методах.
+    
     if (error.response?.status === 401) {
       // Токен невалидный - выкидываем на логин
       localStorage.removeItem('token')

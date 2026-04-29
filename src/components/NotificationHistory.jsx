@@ -59,7 +59,7 @@ function NotificationHistory({ currentTenantId }) {
 
   if (loading) return <div className="dashboard">Загрузка истории...</div>
   if (error) return <div className="dashboard error">{error}</div>
-  if (!currentTenantId) return <div className="dashboard">Выберите тенант</div>
+  if (!currentTenantId) return <div className="dashboard">Выберите компанию</div>
 
   return (
     <div className="dashboard">

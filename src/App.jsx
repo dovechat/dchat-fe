@@ -4,7 +4,7 @@ import { useAuth } from './context/AuthContext'
 import Login from './components/Login'
 import Register from './components/Register'
 import VerifyEmail from './components/VerifyEmail'
-import Header from './components/Header'
+import AppShell from './components/AppShell'
 import TenantList from './components/TenantList'
 import TenantDetails from './components/TenantDetails'
 import CreateTenant from './components/CreateTenant'
@@ -85,17 +85,6 @@ function App() {
     )
   }
 
-  const handleNavigate = (section) => {
-    const map = {
-      tenants: '/tenants',
-      tariffs: '/tariffs',
-      billing: '/billing',
-      lines: '/lines',
-      notifications: '/notifications',
-    }
-    navigate(map[section] || '/tenants')
-  }
-
   const handleTenantSelected = async (tenantId) => {
     try {
       const tenantData = await getTenant(tenantId)
@@ -106,34 +95,34 @@ function App() {
   }
 
   return (
-    <>
-      <Header currentTenant={currentTenant} onNavigate={handleNavigate} />
+    <AppShell currentCompany={currentTenant}>
       <Routes>
-        <Route path="/" element={<Navigate to="/tenants" replace />} />
+        <Route path="/" element={<Navigate to="/companies" replace />} />
 
-        <Route path="/tenants" element={
+        <Route path="/companies" element={
           <TenantList
             currentTenantId={currentTenant?.id}
-            onTenantClick={(tenant) => navigate(`/tenants/${tenant.id}`)}
-            onCreateClick={() => navigate('/tenants/create')}
+            onTenantClick={(tenant) => navigate(`/companies/${tenant.id}`)}
+            onCreateClick={() => navigate('/companies/create')}
             onTenantSelected={handleTenantSelected}
           />
         } />
-        <Route path="/tenants/create" element={
+        <Route path="/companies/create" element={
           <CreateTenant
-            onCreated={() => navigate('/tenants')}
-            onCancel={() => navigate('/tenants')}
+            onCreated={() => navigate('/companies')}
+            onCancel={() => navigate('/companies')}
           />
         } />
-        <Route path="/tenants/:tenantId" element={
+        <Route path="/companies/:tenantId" element={
           <TenantDetailsWrapper onTenantSelected={handleTenantSelected} />
         } />
-        <Route path="/tenants/:tenantId/edit" element={
+        <Route path="/companies/:tenantId/edit" element={
           <EditTenantWrapper />
         } />
-        <Route path="/tenants/:tenantId/banking" element={
+        <Route path="/companies/:tenantId/banking" element={
           <BankingWrapper />
         } />
+        <Route path="/tenants/*" element={<Navigate to="/companies" replace />} />
 
         <Route path="/tariffs" element={
           <TariffList
@@ -154,7 +143,7 @@ function App() {
         <Route path="/billing" element={
           tenantLoading ? null : currentTenant?.id
             ? <BillingDashboard tenantId={currentTenant.id} />
-            : <Navigate to="/tenants" replace />
+            : <Navigate to="/companies" replace />
         } />
 
         <Route path="/lines" element={
@@ -164,7 +153,7 @@ function App() {
                 onCreateClick={() => navigate('/lines/create')}
                 onLineClick={(line) => navigate(`/lines/${line.id}`)}
               />
-            : <Navigate to="/tenants" replace />
+            : <Navigate to="/companies" replace />
         } />
 
         <Route path="/lines/create" element={
@@ -174,31 +163,31 @@ function App() {
                 onCreated={() => navigate('/lines')}
                 onCancel={() => navigate('/lines')}
               />
-            : <Navigate to="/tenants" replace />
+            : <Navigate to="/companies" replace />
         } />
 
         <Route path="/lines/:lineId" element={
-          (() => { console.log('lines route:', tenantLoading, currentTenant?.id); return tenantLoading ? null : currentTenant?.id
+          (() => { return tenantLoading ? null : currentTenant?.id
             ? <LineDetailsWrapper tenantId={currentTenant.id} />
-            : <Navigate to="/tenants" replace /> })()
+            : <Navigate to="/companies" replace /> })()
         } />
 
         <Route path="/lines/:lineId/channel/:channelType" element={
           tenantLoading ? null : currentTenant?.id
             ? <ChannelAccountWrapper tenantId={currentTenant.id} />
-            : <Navigate to="/tenants" replace />
+            : <Navigate to="/companies" replace />
         } />
 
         <Route path="/lines/:lineId/renew" element={
           tenantLoading ? null : currentTenant?.id
             ? <RenewLineWrapper tenantId={currentTenant.id} />
-            : <Navigate to="/tenants" replace />
+            : <Navigate to="/companies" replace />
         } />
 
         <Route path="/lines/:lineId/add-channel" element={
           tenantLoading ? null : currentTenant?.id
             ? <AddChannelWrapper tenantId={currentTenant.id} />
-            : <Navigate to="/tenants" replace />
+            : <Navigate to="/companies" replace />
         } />
 
 
@@ -210,9 +199,9 @@ function App() {
           </div>
         } />
 
-        <Route path="*" element={<Navigate to="/tenants" replace />} />
+        <Route path="*" element={<Navigate to="/companies" replace />} />
       </Routes>
-    </>
+    </AppShell>
   )
 }
 
@@ -229,9 +218,9 @@ function TenantDetailsWrapper({ onTenantSelected }) {
   return (
     <TenantDetails
       tenant={tenant}
-      onEdit={() => navigate(`/tenants/${tenantId}/edit`)}
-      onEditBanking={() => navigate(`/tenants/${tenantId}/banking`)}
-      onBack={() => navigate('/tenants')}
+      onEdit={() => navigate(`/companies/${tenantId}/edit`)}
+      onEditBanking={() => navigate(`/companies/${tenantId}/banking`)}
+      onBack={() => navigate('/companies')}
     />
   )
 }
@@ -249,8 +238,8 @@ function EditTenantWrapper() {
   return (
     <EditTenant
       tenant={tenant}
-      onSaved={() => navigate('/tenants')}
-      onCancel={() => navigate(`/tenants/${tenantId}`)}
+      onSaved={() => navigate('/companies')}
+      onCancel={() => navigate(`/companies/${tenantId}`)}
     />
   )
 }
@@ -268,8 +257,8 @@ function BankingWrapper() {
   return (
     <BankingDetailsRu
       tenant={tenant}
-      onSaved={() => navigate('/tenants')}
-      onCancel={() => navigate(`/tenants/${tenantId}`)}
+      onSaved={() => navigate('/companies')}
+      onCancel={() => navigate(`/companies/${tenantId}`)}
     />
   )
 }

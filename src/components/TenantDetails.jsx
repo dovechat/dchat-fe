@@ -6,7 +6,7 @@ function TenantDetails({ tenant, onEdit, onEditBanking, onBack }) {
     <div className="dashboard">
       <div style={{ marginBottom: '20px' }}>
         <Button variant="secondary" onClick={onBack} style={{ marginBottom: '16px' }}>
-          ← Назад к списку
+          ← Назад к компаниям
         </Button>
         
         <h2>{tenant.name}</h2>

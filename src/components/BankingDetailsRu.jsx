@@ -47,7 +47,7 @@ function BankingDetailsRu({ tenant, onSaved, onCancel }) {
     <div className="container" style={{ maxWidth: '500px', margin: '40px auto' }}>
       <h2>Банковские реквизиты (RU)</h2>
       <p style={{ fontSize: '13px', color: '#666', marginBottom: '20px' }}>
-        Тенант: <strong>{tenant.name}</strong>
+        Компания: <strong>{tenant.name}</strong>
       </p>
 
       <form onSubmit={onSubmit} autoComplete="off">

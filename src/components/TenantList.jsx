@@ -40,7 +40,7 @@ function TenantList({ currentTenantId, onTenantClick, onCreateClick, onTenantSel
       // Обновляем токен через AuthContext
       updateToken(data.access_token, data.refresh_token)
       
-      // Уведомляем родительский компонент об изменении активного тенанта
+      // Уведомляем родительский компонент об изменении активной компании
       if (onTenantSelected) {
         onTenantSelected(tenantId)
       }
@@ -52,7 +52,7 @@ function TenantList({ currentTenantId, onTenantClick, onCreateClick, onTenantSel
   }
 
   if (loading) {
-    return <div className="dashboard">Загрузка тенантов...</div>
+    return <div className="dashboard">Загрузка компаний...</div>
   }
 
   if (error) {
@@ -61,14 +61,14 @@ function TenantList({ currentTenantId, onTenantClick, onCreateClick, onTenantSel
 
   return (
     <div className="dashboard">
-      <h2 className="section-title">Ваши тенанты</h2>
+      <h2 className="section-title">Ваши компании</h2>
       {tenants.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '40px' }}>
           <p style={{ marginBottom: '20px', color: '#666' }}>
-            У вас пока нет ни одного тенанта
+            У вас пока нет ни одной компании
           </p>
           <Button variant="success" onClick={onCreateClick}>
-            Создать первый тенант
+            Создать первую компанию
           </Button>
         </div>
       ) : (
@@ -98,7 +98,7 @@ function TenantList({ currentTenantId, onTenantClick, onCreateClick, onTenantSel
                   </p>
                 </div>
                 
-                {/* Кнопка активации тенанта - показываем только для неактивных */}
+                {/* Кнопка активации компании - показываем только для неактивных */}
                 {tenant.id !== currentTenantId && (
                   <Button
                     variant="primary"
@@ -113,7 +113,7 @@ function TenantList({ currentTenantId, onTenantClick, onCreateClick, onTenantSel
             ))}
           </div>
           <Button variant="success" onClick={onCreateClick}>
-            + Создать новый тенант
+            + Создать новую компанию
           </Button>
         </>
       )}

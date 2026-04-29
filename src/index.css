@@ -311,4 +311,114 @@ h2 {
   color: #6c757d;
 }
 
-.app-header { background: white; border-bottom: 1px solid #dee2e6
+.app-header { background: white; border-bottom: 1px solid #dee2e6; }
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 50%, #f3e8ff 100%);
+}
+
+.app-sidebar {
+  width: 260px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(8px);
+  border-right: 1px solid #dbeafe;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.app-brand {
+  padding: 24px 20px;
+  border-bottom: 1px solid #dbeafe;
+}
+
+.app-brand h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  background: linear-gradient(90deg, #2563eb, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.app-brand p {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.app-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+
+.app-nav-link {
+  text-decoration: none;
+  color: #334155;
+  font-weight: 500;
+  border-radius: 10px;
+  padding: 10px 12px;
+  transition: all 0.2s ease;
+}
+
+.app-nav-link:hover {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.app-nav-link.active {
+  color: #ffffff;
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.35);
+}
+
+.app-sidebar-footer {
+  margin-top: auto;
+  padding: 16px;
+  border-top: 1px solid #dbeafe;
+}
+
+.app-company-label,
+.app-user-email {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: #475569;
+}
+
+.app-company-label strong {
+  color: #0f172a;
+}
+
+.app-logout-btn {
+  width: 100%;
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.dashboard {
+  padding: 24px 28px;
+}
+
+.container {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #dbeafe;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.08);
+}
+
+.tenant-card {
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  box-shadow: 0 8px 18px rgba(148, 163, 184, 0.15);
+}
+
+.tenant-card.active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
