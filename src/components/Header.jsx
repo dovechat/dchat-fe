@@ -1,30 +1,45 @@
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Button from './ui/Button'
 
 function Header({ currentTenant, onNavigate }) {
   const { user, logout } = useAuth()
+  const navigate = useNavigate()
+
+  const go = (key) => {
+    if (onNavigate) {
+      onNavigate(key)
+      return
+    }
+    const paths = {
+      tenants: '/companies',
+      lines: '/lines',
+      billing: '/billing',
+      tariffs: '/tariffs',
+      notifications: '/notifications',
+    }
+    const p = paths[key]
+    if (p) navigate(p)
+  }
 
   return (
     <header className="app-header">
       <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-        <h3
-            onClick={() => onNavigate('tenants')}>
-          DoveChat
-        </h3>
+        <h3 onClick={() => go('tenants')}>DoveChat</h3>
         <nav style={{ display: 'flex', gap: '16px' }}>
-          <button onClick={() => onNavigate('tenants')} className="nav-button">
-            Тенанты
+          <button type="button" onClick={() => go('tenants')} className="nav-button">
+            Компании
           </button>
-          <button onClick={() => onNavigate('lines')} className="nav-button">
+          <button type="button" onClick={() => go('lines')} className="nav-button">
             Линии
           </button>
-          <button onClick={() => onNavigate('billing')} className="nav-button">
+          <button type="button" onClick={() => go('billing')} className="nav-button">
             Биллинг
           </button>
-          <button onClick={() => onNavigate('tariffs')} className="nav-button">
+          <button type="button" onClick={() => go('tariffs')} className="nav-button">
             Тарифы
           </button>
-          <button onClick={() => onNavigate('notifications')} className="nav-button">
+          <button type="button" onClick={() => go('notifications')} className="nav-button">
             Уведомления
           </button>
         </nav>
@@ -32,8 +47,8 @@ function Header({ currentTenant, onNavigate }) {
       
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         {currentTenant && (
-        <span style={{ fontSize: '13px', color: '#666', whiteSpace: 'nowrap' }}>
-          Тенант: <strong>{currentTenant.name || 'Без названия'}</strong>
+        <span className="tenant-label" style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>
+          Компания: <strong>{currentTenant.name || 'Без названия'}</strong>
         </span>
         )}
         <span style={{ fontSize: '13px', color: '#666' }}>{user?.email}</span>

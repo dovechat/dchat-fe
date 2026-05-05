@@ -42,10 +42,12 @@ function EditTariff({ tariff, onSaved, onCancel }) {
   }
 
   return (
-    <div className="container" style={{ maxWidth: '500px', margin: '40px auto' }}>
-      <h2>Редактировать тариф</h2>
-      
-
+    <div className="dashboard">
+      <header className="page-hero">
+        <h1 className="page-title-gradient">Редактировать тариф</h1>
+        <p className="page-hero-sub">Изменение параметров тарифа</p>
+      </header>
+      <div className="surface-card form-wide">
       <form onSubmit={onSubmit} autoComplete="off">
 
 <Input
@@ -125,6 +127,7 @@ function EditTariff({ tariff, onSaved, onCancel }) {
           </Button>
         </div>
       </form>
+      </div>
     </div>
   )
 }

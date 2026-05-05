@@ -244,7 +244,9 @@ const handleToggleConnection = async (channelType) => {
                   </Button>
                 </div>
               ) : (
-                <h2>{line.name}</h2>
+                <h1 className="page-title-gradient" style={{ fontSize: 'clamp(1.25rem, 2.5vw, 1.5rem)', margin: 0 }}>
+                  {line.name}
+                </h1>
               )}
             </div>
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -285,17 +287,8 @@ const handleToggleConnection = async (channelType) => {
         </div>
       </div>
 
-      {/* Основная информация */}
-      <div style={{ 
-        background: 'white', 
-        padding: '24px', 
-        borderRadius: '12px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        marginBottom: '20px'
-      }}>
-        <h3 style={{ fontSize: '16px', marginBottom: '20px', borderBottom: '1px solid #e1e4e8', paddingBottom: '8px' }}>
-          Основная информация
-        </h3>
+      <div className="surface-card">
+        <h3>Основная информация</h3>
         
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px' }}>
           <div>
@@ -319,17 +312,8 @@ const handleToggleConnection = async (channelType) => {
         </div>
       </div>
 
-      {/* Состояние подключения */}
-      <div style={{
-        background: 'white',
-        padding: '24px',
-        borderRadius: '12px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        marginBottom: '20px'
-      }}>
-        <h3 style={{ fontSize: '16px', marginBottom: '20px', borderBottom: '1px solid #e1e4e8', paddingBottom: '8px' }}>
-          Каналы
-        </h3>
+      <div className="surface-card">
+        <h3>Каналы</h3>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
           {accounts.map(account => (
             <div key={account.id} style={{
@@ -418,16 +402,8 @@ const handleToggleConnection = async (channelType) => {
         </div>
       </div>
 
-      {/* Действия с линией */}
-      <div style={{ 
-        background: 'white', 
-        padding: '24px', 
-        borderRadius: '12px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-      }}>
-        <h3 style={{ fontSize: '16px', marginBottom: '20px', borderBottom: '1px solid #e1e4e8', paddingBottom: '8px' }}>
-          Действия с линией
-        </h3>
+      <div className="surface-card">
+        <h3>Действия с линией</h3>
         
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
           {[

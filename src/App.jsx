@@ -150,6 +150,7 @@ function App() {
           tenantLoading ? null : currentTenant?.id
             ? <LineList
                 tenantId={currentTenant.id}
+                companyName={currentTenant?.name || ''}
                 onCreateClick={() => navigate('/lines/create')}
                 onLineClick={(line) => navigate(`/lines/${line.id}`)}
               />
@@ -192,10 +193,17 @@ function App() {
 
 
         <Route path="/notifications" element={
-          <div style={{ padding: '24px' }}>
-            <NotificationSettings currentTenantId={currentTenant?.id} />
-            <hr style={{ margin: '32px 0' }} />
-            <NotificationHistory currentTenantId={currentTenant?.id} />
+          <div className="dashboard">
+            <header className="page-hero">
+              <h1 className="page-title-gradient">Уведомления</h1>
+              <p className="page-hero-sub">Настройки и история для текущей компании</p>
+            </header>
+            <div className="surface-card">
+              <NotificationSettings currentTenantId={currentTenant?.id} />
+            </div>
+            <div className="surface-card">
+              <NotificationHistory currentTenantId={currentTenant?.id} />
+            </div>
           </div>
         } />
 

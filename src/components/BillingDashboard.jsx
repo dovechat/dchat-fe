@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getBalance, getBalanceHistory, getPayments } from '../api/billing'
-import Button from './ui/Button'
+import { Wallet, Gift, Receipt } from 'lucide-react'
 
 function BillingDashboard({ tenantId }) {
   const [balance, setBalance] = useState(null)
@@ -18,22 +18,18 @@ function BillingDashboard({ tenantId }) {
   const loadData = async () => {
     try {
       setError('')
-      
-      // Загружаем баланс
+
       const balanceData = await getBalance(tenantId)
       setBalance(balanceData)
-      setLoading(prev => ({ ...prev, balance: false }))
+      setLoading((prev) => ({ ...prev, balance: false }))
 
-      // Загружаем историю операций
       const historyData = await getBalanceHistory(tenantId)
       setHistory(historyData)
-      setLoading(prev => ({ ...prev, history: false }))
+      setLoading((prev) => ({ ...prev, history: false }))
 
-      // Загружаем историю платежей
       const paymentsData = await getPayments(tenantId)
       setPayments(paymentsData)
-      setLoading(prev => ({ ...prev, payments: false }))
-
+      setLoading((prev) => ({ ...prev, payments: false }))
     } catch (err) {
       setError(err.message)
       setLoading({ balance: false, history: false, payments: false })
@@ -47,153 +43,225 @@ function BillingDashboard({ tenantId }) {
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     })
   }
 
-  if (error) {
-    return <div className="dashboard error">{error}</div>
+  const paymentBadgeClass = (status) => {
+    if (status === 'paid') return 'dc-badge dc-badge-green'
+    if (status === 'failed') return 'dc-badge dc-badge-red'
+    if (status === 'pending') return 'dc-badge dc-badge-amber'
+    return 'dc-badge dc-badge-neutral'
   }
 
-  return (
-    <div className="dashboard">
-      <h2>Биллинг</h2>
+  const paymentLabel = (status) => {
+    if (status === 'paid') return 'Оплачен'
+    if (status === 'failed') return 'Ошибка'
+    if (status === 'pending') return 'Ожидание'
+    return status
+  }
 
-      {/* Баланс */}
-      <div style={{ 
-        background: 'white', 
-        padding: '24px', 
-        borderRadius: '12px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        marginBottom: '20px'
-      }}>
-        <h3 style={{ fontSize: '16px', marginBottom: '16px', borderBottom: '1px solid #e1e4e8', paddingBottom: '8px' }}>
-          Баланс
-        </h3>
-        
-        {loading.balance ? (
-          <div>Загрузка баланса...</div>
-        ) : balance ? (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-            <div>
-              <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Основной баланс</div>
-              <div style={{ fontSize: '24px', fontWeight: '600', color: '#1a1a1a' }}>
-                {parseFloat(balance.main_balance).toFixed(2)} ₽
+  if (error) {
+    return (
+      <div className="dc-fe-page">
+        <div className="error">{error}</div>
+      </div>
+    )
+  }
+
+  const mainBal = balance ? parseFloat(balance.main_balance) : null
+  const bonusBal = balance ? parseFloat(balance.bonus_balance) : null
+
+  return (
+    <div className="dc-fe-page dc-fe-stack">
+      <div className="dc-fe-header">
+        <div>
+          <h1 className="dc-fe-title">Биллинг</h1>
+          <p className="dc-fe-subtitle">Баланс, операции и платежи по компании</p>
+        </div>
+      </div>
+
+      <div className="dc-billing-grid">
+        <div className="dc-stat-card">
+          <div className="dc-stat-inner">
+            <div className="dc-stat-row">
+              <div>
+                <p className="dc-muted-xs" style={{ margin: 0 }}>
+                  Основной баланс
+                </p>
+                <p className="dc-stat-value" style={{ fontSize: '1.75rem' }}>
+                  {loading.balance ? '…' : mainBal != null ? `${mainBal.toFixed(2)} ₽` : '—'}
+                </p>
               </div>
-            </div>
-            <div>
-              <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Бонусный баланс</div>
-              <div style={{ fontSize: '24px', fontWeight: '600', color: '#27ae60' }}>
-                {parseFloat(balance.bonus_balance).toFixed(2)} ₽
+              <div className="dc-icon-tile">
+                <Wallet size={22} />
               </div>
             </div>
           </div>
+        </div>
+        <div className="dc-stat-card">
+          <div className="dc-stat-inner">
+            <div className="dc-stat-row">
+              <div>
+                <p className="dc-muted-xs" style={{ margin: 0 }}>
+                  Бонусный баланс
+                </p>
+                <p className="dc-stat-value" style={{ fontSize: '1.75rem', color: '#15803d' }}>
+                  {loading.balance ? '…' : bonusBal != null ? `${bonusBal.toFixed(2)} ₽` : '—'}
+                </p>
+              </div>
+              <div
+                className="dc-icon-tile"
+                style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}
+              >
+                <Gift size={22} />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="dc-stat-card">
+          <div className="dc-stat-inner">
+            <div className="dc-stat-row">
+              <div>
+                <p className="dc-muted-xs" style={{ margin: 0 }}>
+                  Платежей в истории
+                </p>
+                <p className="dc-stat-value" style={{ fontSize: '1.75rem' }}>
+                  {loading.payments ? '…' : payments.length}
+                </p>
+              </div>
+              <div
+                className="dc-icon-tile"
+                style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)' }}
+              >
+                <Receipt size={22} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="dc-card dc-card-pad">
+        <h3
+          style={{
+            margin: '0 0 1rem',
+            fontSize: '1rem',
+            paddingBottom: '0.5rem',
+            borderBottom: '1px solid #e2e8f0',
+          }}
+        >
+          Детализация баланса
+        </h3>
+        {loading.balance ? (
+          <p className="dc-muted">Загрузка баланса...</p>
+        ) : balance ? (
+          <div className="dc-field-grid">
+            <div>
+              <p className="dc-muted-xs">Основной</p>
+              <p className="dc-strong">{parseFloat(balance.main_balance).toFixed(2)} ₽</p>
+            </div>
+            <div>
+              <p className="dc-muted-xs">Бонусный</p>
+              <p className="dc-strong" style={{ color: '#15803d' }}>
+                {parseFloat(balance.bonus_balance).toFixed(2)} ₽
+              </p>
+            </div>
+          </div>
         ) : (
-          <div>Нет данных о балансе</div>
+          <p className="dc-muted">Нет данных о балансе</p>
         )}
       </div>
 
-      {/* История операций */}
-      <div style={{ 
-        background: 'white', 
-        padding: '24px', 
-        borderRadius: '12px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        marginBottom: '20px'
-      }}>
-        <h3 style={{ fontSize: '16px', marginBottom: '16px', borderBottom: '1px solid #e1e4e8', paddingBottom: '8px' }}>
+      <div className="dc-card dc-card-pad">
+        <h3
+          style={{
+            margin: '0 0 1rem',
+            fontSize: '1rem',
+            paddingBottom: '0.5rem',
+            borderBottom: '1px solid #e2e8f0',
+          }}
+        >
           История операций
         </h3>
-        
         {loading.history ? (
-          <div>Загрузка истории...</div>
+          <p className="dc-muted">Загрузка истории...</p>
         ) : history.length > 0 ? (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div className="data-table-wrap">
+            <table className="data-table">
               <thead>
-                <tr style={{ borderBottom: '1px solid #e1e4e8' }}>
-                  <th style={{ textAlign: 'left', padding: '8px 0', fontSize: '13px', color: '#666' }}>Дата</th>
-                  <th style={{ textAlign: 'left', padding: '8px 0', fontSize: '13px', color: '#666' }}>Сумма</th>
-                  <th style={{ textAlign: 'left', padding: '8px 0', fontSize: '13px', color: '#666' }}>Тип</th>
-                  <th style={{ textAlign: 'left', padding: '8px 0', fontSize: '13px', color: '#666' }}>Описание</th>
+                <tr>
+                  <th>Дата</th>
+                  <th>Сумма</th>
+                  <th>Тип</th>
+                  <th>Описание</th>
                 </tr>
               </thead>
               <tbody>
                 {history.map((item) => (
-                  <tr key={item.id} style={{ borderBottom: '1px solid #f5f7fa' }}>
-                    <td style={{ padding: '12px 0', fontSize: '13px' }}>{formatDate(item.created_at)}</td>
-                    <td style={{ padding: '12px 0', fontSize: '13px', color: parseFloat(item.amount) >= 0 ? '#27ae60' : '#e74c3c' }}>
-                      {parseFloat(item.amount) >= 0 ? '+' : ''}{parseFloat(item.amount).toFixed(2)} ₽
+                  <tr key={item.id}>
+                    <td>{formatDate(item.created_at)}</td>
+                    <td style={{ color: parseFloat(item.amount) >= 0 ? '#16a34a' : '#dc2626' }}>
+                      {parseFloat(item.amount) >= 0 ? '+' : ''}
+                      {parseFloat(item.amount).toFixed(2)} ₽
                     </td>
-                    <td style={{ padding: '12px 0', fontSize: '13px' }}>{item.balance_type}</td>
-                    <td style={{ padding: '12px 0', fontSize: '13px', color: '#666' }}>{item.description || '-'}</td>
+                    <td>{item.balance_type}</td>
+                    <td className="dc-muted">{item.description || '—'}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         ) : (
-          <div style={{ color: '#666', textAlign: 'center', padding: '20px' }}>История операций пуста</div>
+          <p className="dc-muted" style={{ textAlign: 'center', padding: '1.25rem' }}>
+            История операций пуста
+          </p>
         )}
       </div>
 
-      {/* История платежей */}
-      <div style={{ 
-        background: 'white', 
-        padding: '24px', 
-        borderRadius: '12px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-      }}>
-        <h3 style={{ fontSize: '16px', marginBottom: '16px', borderBottom: '1px solid #e1e4e8', paddingBottom: '8px' }}>
+      <div className="dc-card dc-card-pad">
+        <h3
+          style={{
+            margin: '0 0 1rem',
+            fontSize: '1rem',
+            paddingBottom: '0.5rem',
+            borderBottom: '1px solid #e2e8f0',
+          }}
+        >
           История платежей
         </h3>
-        
         {loading.payments ? (
-          <div>Загрузка платежей...</div>
+          <p className="dc-muted">Загрузка платежей...</p>
         ) : payments.length > 0 ? (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div className="data-table-wrap">
+            <table className="data-table">
               <thead>
-                <tr style={{ borderBottom: '1px solid #e1e4e8' }}>
-                  <th style={{ textAlign: 'left', padding: '8px 0', fontSize: '13px', color: '#666' }}>Дата</th>
-                  <th style={{ textAlign: 'left', padding: '8px 0', fontSize: '13px', color: '#666' }}>Сумма</th>
-                  <th style={{ textAlign: 'left', padding: '8px 0', fontSize: '13px', color: '#666' }}>Статус</th>
-                  <th style={{ textAlign: 'left', padding: '8px 0', fontSize: '13px', color: '#666' }}>Метод</th>
+                <tr>
+                  <th>Дата</th>
+                  <th>Сумма</th>
+                  <th>Статус</th>
+                  <th>Метод</th>
                 </tr>
               </thead>
               <tbody>
                 {payments.map((payment) => (
-                  <tr key={payment.id} style={{ borderBottom: '1px solid #f5f7fa' }}>
-                    <td style={{ padding: '12px 0', fontSize: '13px' }}>{formatDate(payment.created_at)}</td>
-                    <td style={{ padding: '12px 0', fontSize: '13px' }}>{parseFloat(payment.amount).toFixed(2)} ₽</td>
-                    <td style={{ padding: '12px 0', fontSize: '13px' }}>
-                      <span style={{
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        fontSize: '12px',
-                        fontWeight: '500',
-                        background: 
-                          payment.status === 'paid' ? '#d4edda' :
-                          payment.status === 'failed' ? '#f8d7da' :
-                          payment.status === 'pending' ? '#fff3cd' : '#e2e3e5',
-                        color: 
-                          payment.status === 'paid' ? '#155724' :
-                          payment.status === 'failed' ? '#721c24' :
-                          payment.status === 'pending' ? '#856404' : '#383d41'
-                      }}>
-                        {payment.status === 'paid' ? 'Оплачен' :
-                         payment.status === 'failed' ? 'Ошибка' :
-                         payment.status === 'pending' ? 'Ожидание' : payment.status}
+                  <tr key={payment.id}>
+                    <td>{formatDate(payment.created_at)}</td>
+                    <td>{parseFloat(payment.amount).toFixed(2)} ₽</td>
+                    <td>
+                      <span className={paymentBadgeClass(payment.status)}>
+                        {paymentLabel(payment.status)}
                       </span>
                     </td>
-                    <td style={{ padding: '12px 0', fontSize: '13px', color: '#666' }}>{payment.payment_method || '-'}</td>
+                    <td className="dc-muted">{payment.payment_method || '—'}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         ) : (
-          <div style={{ color: '#666', textAlign: 'center', padding: '20px' }}>История платежей пуста</div>
+          <p className="dc-muted" style={{ textAlign: 'center', padding: '1.25rem' }}>
+            История платежей пуста
+          </p>
         )}
       </div>
     </div>

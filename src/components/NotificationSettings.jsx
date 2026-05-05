@@ -102,8 +102,10 @@ function NotificationSettings({ currentTenantId }) {
   if (!currentTenantId) return <div className="dashboard">Выберите компанию</div>
 
   return (
-    <div className="dashboard">
-      <h2>Настройки уведомлений</h2>
+    <div>
+      <h3 style={{ marginTop: 0, marginBottom: '1rem', fontSize: '1.05rem', color: '#0f172a' }}>
+        Настройки уведомлений
+      </h3>
       
       <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <p>Управление каналами уведомлений</p>

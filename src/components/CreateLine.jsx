@@ -127,9 +127,14 @@ function CreateLine({ tenantId, lineId, existingChannels = [], renewMode = false
   }
 
   return (
-    <div className="container" style={{ maxWidth: '640px', margin: '40px auto' }}>
-      <h2>{renewMode ? 'Продлить подписку' : isAddMode ? 'Добавить канал к линии' : 'Покупка линии'}</h2>
-
+    <div className="dashboard">
+      <header className="page-hero">
+        <h1 className="page-title-gradient">
+          {renewMode ? 'Продлить подписку' : isAddMode ? 'Добавить канал к линии' : 'Покупка линии'}
+        </h1>
+        <p className="page-hero-sub">Выбор каналов и срока по тарифам</p>
+      </header>
+      <div className="surface-card form-wide-lg">
       <form onSubmit={onSubmit} autoComplete="off">
 
         {/* Название — только для новой линии */}
@@ -361,6 +366,7 @@ function CreateLine({ tenantId, lineId, existingChannels = [], renewMode = false
         </div>
 
       </form>
+      </div>
     </div>
   )
 }

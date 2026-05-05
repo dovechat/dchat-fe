@@ -42,9 +42,12 @@ function CreateTariff({ onCreated, onCancel }) {
   }
 
   return (
-    <div className="container" style={{ maxWidth: '500px', margin: '40px auto' }}>
-      <h2>Создать тариф</h2>
-
+    <div className="dashboard">
+      <header className="page-hero">
+        <h1 className="page-title-gradient">Создать тариф</h1>
+        <p className="page-hero-sub">Параметры цены и канала</p>
+      </header>
+      <div className="surface-card form-wide">
       <form onSubmit={onSubmit} autoComplete="off">
         <Input
           label="Название тарифа"
@@ -123,6 +126,7 @@ function CreateTariff({ onCreated, onCancel }) {
           </Button>
         </div>
       </form>
+      </div>
     </div>
   )
 }

@@ -25,6 +25,7 @@ function VerifyEmail({ email, tempToken, onBack, onVerified }) {
   }
 
   return (
+    <div className="auth-page">
     <div className="container">
       <h2>Подтверждение email</h2>
       <p>
@@ -51,6 +52,7 @@ function VerifyEmail({ email, tempToken, onBack, onVerified }) {
           Назад
         </Button>
       </form>
+    </div>
     </div>
   )
 }

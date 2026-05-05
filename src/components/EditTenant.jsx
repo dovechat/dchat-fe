@@ -36,9 +36,12 @@ function EditTenant({ tenant, onSaved, onCancel }) {
   }
 
   return (
-    <div className="container" style={{ maxWidth: '500px', margin: '40px auto' }}>
-      <h2>Редактировать компанию</h2>
-
+    <div className="dashboard">
+      <header className="page-hero">
+        <h1 className="page-title-gradient">Редактировать компанию</h1>
+        <p className="page-hero-sub">Изменение параметров компании</p>
+      </header>
+      <div className="surface-card form-wide">
       <form onSubmit={onSubmit} autoComplete="off">
         <Input
           label="Название компании"
@@ -118,6 +121,7 @@ function EditTenant({ tenant, onSaved, onCancel }) {
           </Button>
         </div>
       </form>
+      </div>
     </div>
   )
 }

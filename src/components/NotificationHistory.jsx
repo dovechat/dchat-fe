@@ -62,8 +62,10 @@ function NotificationHistory({ currentTenantId }) {
   if (!currentTenantId) return <div className="dashboard">Выберите компанию</div>
 
   return (
-    <div className="dashboard">
-      <h2>История уведомлений</h2>
+    <div>
+      <h3 style={{ marginTop: 0, marginBottom: '1rem', fontSize: '1.05rem', color: '#0f172a' }}>
+        История уведомлений
+      </h3>
       
       <div style={{ marginBottom: '20px' }}>
         <label style={{ display: 'block', marginBottom: '5px' }}>Фильтр по типу события</label>

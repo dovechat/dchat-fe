@@ -38,6 +38,7 @@ function Login({ onSwitchToRegister }) {
   }
 
   return (
+    <div className="auth-page">
     <div className="container">
       <h2>Вход</h2>
       <form onSubmit={onSubmit} autoComplete="off">
@@ -79,6 +80,7 @@ function Login({ onSwitchToRegister }) {
           Нет аккаунта? Зарегистрироваться
         </button>
       </div>
+    </div>
     </div>
   )
 }

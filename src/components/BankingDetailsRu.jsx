@@ -44,12 +44,12 @@ function BankingDetailsRu({ tenant, onSaved, onCancel }) {
   }
 
   return (
-    <div className="container" style={{ maxWidth: '500px', margin: '40px auto' }}>
-      <h2>Банковские реквизиты (RU)</h2>
-      <p style={{ fontSize: '13px', color: '#666', marginBottom: '20px' }}>
-        Компания: <strong>{tenant.name}</strong>
-      </p>
-
+    <div className="dashboard">
+      <header className="page-hero">
+        <h1 className="page-title-gradient">Банковские реквизиты (RU)</h1>
+        <p className="page-hero-sub">Компания: <strong>{tenant.name}</strong></p>
+      </header>
+      <div className="surface-card form-wide">
       <form onSubmit={onSubmit} autoComplete="off">
         <Input
           label="Название банка"
@@ -148,6 +148,7 @@ function BankingDetailsRu({ tenant, onSaved, onCancel }) {
           </Button>
         </div>
       </form>
+      </div>
     </div>
   )
 }

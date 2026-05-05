@@ -35,9 +35,12 @@ function CreateTenant({ onCreated, onCancel }) {
   }
 
   return (
-    <div className="container" style={{ maxWidth: '500px', margin: '40px auto' }}>
-      <h2>Создать компанию</h2>
-
+    <div className="dashboard">
+      <header className="page-hero">
+        <h1 className="page-title-gradient">Создать компанию</h1>
+        <p className="page-hero-sub">Заполните данные новой компании</p>
+      </header>
+      <div className="surface-card form-wide">
       <form onSubmit={onSubmit} autoComplete="off">
         <Input
           label="Название компании"
@@ -119,6 +122,7 @@ function CreateTenant({ onCreated, onCancel }) {
           )}
         </div>
       </form>
+      </div>
     </div>
   )
 }

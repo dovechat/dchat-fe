@@ -4,24 +4,16 @@ import MembersList from './MembersList'
 function TenantDetails({ tenant, onEdit, onEditBanking, onBack }) {
   return (
     <div className="dashboard">
-      <div style={{ marginBottom: '20px' }}>
-        <Button variant="secondary" onClick={onBack} style={{ marginBottom: '16px' }}>
-          ← Назад к компаниям
+      <div className="page-hero" style={{ marginBottom: '1.25rem' }}>
+        <Button variant="secondary" onClick={onBack} style={{ marginBottom: '12px' }}>
+          ← Назад к списку
         </Button>
-        
-        <h2>{tenant.name}</h2>
+        <h1 className="page-title-gradient">{tenant.name}</h1>
+        <p className="page-hero-sub">Карточка компании</p>
       </div>
 
-      <div style={{ 
-        background: 'white', 
-        padding: '24px', 
-        borderRadius: '12px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        marginBottom: '20px'
-      }}>
-        <h3 style={{ fontSize: '16px', marginBottom: '16px', borderBottom: '1px solid #e1e4e8', paddingBottom: '8px' }}>
-          Основная информация
-        </h3>
+      <div className="surface-card">
+        <h3>Основная информация</h3>
         
         <div style={{ display: 'grid', gap: '12px' }}>
           <div>
@@ -48,17 +40,8 @@ function TenantDetails({ tenant, onEdit, onEditBanking, onBack }) {
         </div>
       </div>
 
-      {/* Банковские реквизиты */}
-      <div style={{ 
-        background: 'white', 
-        padding: '24px', 
-        borderRadius: '12px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        marginBottom: '20px'
-      }}>
-        <h3 style={{ fontSize: '16px', marginBottom: '16px', borderBottom: '1px solid #e1e4e8', paddingBottom: '8px' }}>
-          Банковские реквизиты (RU)
-        </h3>
+      <div className="surface-card">
+        <h3>Банковские реквизиты (RU)</h3>
 
         {tenant.banking_details ? (
           <>
@@ -99,13 +82,7 @@ function TenantDetails({ tenant, onEdit, onEditBanking, onBack }) {
         )}
       </div>
 
-      {/* Сотрудники */}
-      <div style={{ 
-        background: 'white', 
-        padding: '24px', 
-        borderRadius: '12px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-      }}>
+      <div className="surface-card">
         <MembersList tenantId={tenant.id} />
       </div>
     </div>

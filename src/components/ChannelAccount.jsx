@@ -515,25 +515,25 @@ const pollGreenStatus = () => {
 
   if (loading) {
     return (
-      <div className="container" style={{ maxWidth: '500px', margin: '40px auto' }}>
-        <div>Загрузка настроек канала...</div>
+      <div className="dashboard">
+        <p className="page-hero-sub">Загрузка настроек канала...</p>
       </div>
     )
   }
 
   return (
-    <div className="container" style={{ maxWidth: '500px', margin: '40px auto' }}>
-      <div style={{ marginBottom: '20px' }}>
-        <Button variant="secondary" onClick={onBack} style={{ marginBottom: '16px' }}>
+    <div className="dashboard">
+      <div className="page-hero" style={{ marginBottom: '1.25rem' }}>
+        <Button variant="secondary" onClick={onBack} style={{ marginBottom: '12px' }}>
           ← Назад к линии
         </Button>
-        
-        <h2>Настройка канала: {getChannelName()}</h2>
-        <p style={{ color: '#666', fontSize: '14px' }}>
+        <h1 className="page-title-gradient">Настройка канала: {getChannelName()}</h1>
+        <p className="page-hero-sub">
           Введите данные для подключения к {getChannelName()}
         </p>
       </div>
 
+      <div className="surface-card form-wide">
       <form onSubmit={handleSubmit} autoComplete="off">
         {renderForm()}
         
@@ -572,6 +572,7 @@ const pollGreenStatus = () => {
         </Button>
       </div>
       </form>
+      </div>
     </div>
   )
 }
