@@ -7,8 +7,14 @@ import {
   Bell,
   Globe,
   LogOut,
+  MessageSquare,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+
+/** Пункт «Чаты» — отдельно, выше остальных (как в mydesign). */
+const primaryNavItems = [
+  { key: 'chats', label: 'Чаты', path: '/chats', Icon: MessageSquare },
+]
 
 const navItems = [
   { key: 'companies', label: 'Компании', path: '/companies', Icon: Building2 },
@@ -17,6 +23,8 @@ const navItems = [
   { key: 'tariffs', label: 'Тарифы', path: '/tariffs', Icon: Tags },
   { key: 'notifications', label: 'Уведомления', path: '/notifications', Icon: Bell },
 ]
+
+const allNavItems = [...primaryNavItems, ...navItems]
 
 function emailInitials(email) {
   if (!email) return '?'
@@ -51,6 +59,20 @@ function AppShell({ currentCompany, children }) {
         </div>
 
         <nav className="app-nav" aria-label="Основное меню">
+          {primaryNavItems.map(({ key, label, path, Icon }) => {
+            const active = pathActive(pathname, path)
+            return (
+              <NavLink
+                key={key}
+                to={path}
+                className={`app-nav-link app-nav-link--primary ${active ? 'active' : ''}`}
+              >
+                <Icon className="app-nav-icon" aria-hidden />
+                <span>{label}</span>
+              </NavLink>
+            )
+          })}
+          <div className="app-nav-divider" aria-hidden />
           {navItems.map(({ key, label, path, Icon }) => {
             const active = pathActive(pathname, path)
             return (
@@ -116,7 +138,7 @@ function AppShell({ currentCompany, children }) {
 
       <nav className="app-mobile-nav" aria-label="Мобильное меню">
         <div className="app-mobile-nav-inner">
-          {navItems.map(({ key, label, path, Icon }) => {
+          {allNavItems.map(({ key, label, path, Icon }) => {
             const active = pathActive(pathname, path)
             return (
               <NavLink

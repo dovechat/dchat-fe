@@ -18,6 +18,8 @@ import BillingDashboard from './components/BillingDashboard'
 import LineList from './components/LineList'
 import CreateLine from './components/CreateLine'
 import LineDetails from './components/LineDetails'
+import LineSettings from './components/LineSettings'
+import Conversations from './components/Conversations'
 import NotificationHistory from './components/NotificationHistory'
 import NotificationSettings from './components/NotificationSettings'
 import ChannelAccount from './components/ChannelAccount'
@@ -164,6 +166,14 @@ function App() {
                 onCreated={() => navigate('/lines')}
                 onCancel={() => navigate('/lines')}
               />
+            : <Navigate to="/companies" replace />
+        } />
+
+        <Route path="/chats" element={<Conversations />} />
+
+        <Route path="/lines/:lineId/settings" element={
+          tenantLoading ? null : currentTenant?.id
+            ? <LineSettings tenantId={currentTenant.id} companyName={currentTenant?.name || ''} />
             : <Navigate to="/companies" replace />
         } />
 

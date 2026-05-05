@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getLines, getChannelAccount, updateLine } from '../api/lines'
 import {
   MessageSquare,
@@ -138,6 +139,7 @@ function buildPlatforms(line, rawAccounts) {
 }
 
 function LineList({ tenantId, companyName, onCreateClick, onLineClick }) {
+  const navigate = useNavigate()
   const [lines, setLines] = useState([])
   const [accountsByLineId, setAccountsByLineId] = useState({})
   const [loading, setLoading] = useState(true)
@@ -292,7 +294,21 @@ function LineList({ tenantId, companyName, onCreateClick, onLineClick }) {
                 <div className="dc-line-card-head">
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div className="dc-line-title-row">
-                      <h3 className="dc-line-name">{line.name}</h3>
+                      <button
+                        type="button"
+                        className="dc-line-name"
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          padding: 0,
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          font: 'inherit',
+                        }}
+                        onClick={() => onLineClick(line)}
+                      >
+                        {line.name}
+                      </button>
                       <span className="dc-badge">{companyBadge}</span>
                       {line.is_demo && (
                         <span className="dc-badge dc-badge-amber">Демо</span>
@@ -322,7 +338,7 @@ function LineList({ tenantId, companyName, onCreateClick, onLineClick }) {
                       className="dc-btn-sm"
                       onClick={(e) => {
                         e.stopPropagation()
-                        onLineClick(line)
+                        navigate(`/lines/${line.id}/settings`)
                       }}
                     >
                       <Settings size={14} />
