@@ -39,7 +39,7 @@ export const updatePaymentStatus = async (tenantId, paymentId, status) => {
 export const createPayment = async (tenantId, amount) => {
   const response = await apiClient.post(`/api/v1/tenants/${tenantId}/billing/payments`, {
     amount,
-    payment_method: 'invoice',
+    payment_method: 'wire',
   })
   return response.data
 }
