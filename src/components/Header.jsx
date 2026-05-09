@@ -16,7 +16,7 @@ function Header({ currentTenant, onNavigate }) {
       lines: '/lines',
       billing: '/billing',
       tariffs: '/tariffs',
-      notifications: '/notifications',
+      notifications: '/profile?tab=notifications',
     }
     const p = paths[key]
     if (p) navigate(p)

@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink, useLocation, Link } from 'react-router-dom'
 import {
   Building2,
   Network,
@@ -8,8 +8,10 @@ import {
   Globe,
   LogOut,
   MessageSquare,
+  User,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import logoMain from '../assets/logo_main.png'
 
 /** Пункт «Чаты» — отдельно, выше остальных (как в mydesign). */
 const primaryNavItems = [
@@ -21,7 +23,7 @@ const navItems = [
   { key: 'lines', label: 'Линии', path: '/lines', Icon: Network },
   { key: 'billing', label: 'Биллинг', path: '/billing', Icon: CreditCard },
   { key: 'tariffs', label: 'Тарифы', path: '/tariffs', Icon: Tags },
-  { key: 'notifications', label: 'Уведомления', path: '/notifications', Icon: Bell },
+  { key: 'profile', label: 'Профиль', path: '/profile', Icon: User },
 ]
 
 const allNavItems = [...primaryNavItems, ...navItems]
@@ -41,10 +43,16 @@ function pathActive(pathname, path) {
   return pathname === path || pathname.startsWith(`${path}/`)
 }
 
+function notificationsTabActive(location) {
+  if (location.pathname !== '/profile') return false
+  return new URLSearchParams(location.search).get('tab') === 'notifications'
+}
+
 function AppShell({ currentCompany, children }) {
   const { user, logout } = useAuth()
   const location = useLocation()
   const pathname = location.pathname
+  const bellActive = notificationsTabActive(location)
 
   const onLogout = () => {
     logout()
@@ -54,48 +62,51 @@ function AppShell({ currentCompany, children }) {
     <div className="app-shell">
       <aside className="app-sidebar">
         <div className="app-brand">
-          <h1>DoveChat</h1>
-          <p>Business Console</p>
+          <NavLink to="/lines" className="app-brand-link" aria-label="Линии" title="Линии">
+            <img src={logoMain} alt="" className="app-brand-logo" decoding="async" />
+          </NavLink>
         </div>
 
-        <nav className="app-nav" aria-label="Основное меню">
-          {primaryNavItems.map(({ key, label, path, Icon }) => {
-            const active = pathActive(pathname, path)
-            return (
-              <NavLink
-                key={key}
-                to={path}
-                className={`app-nav-link app-nav-link--primary ${active ? 'active' : ''}`}
-              >
-                <Icon className="app-nav-icon" aria-hidden />
-                <span>{label}</span>
-              </NavLink>
-            )
-          })}
-          <div className="app-nav-divider" aria-hidden />
-          {navItems.map(({ key, label, path, Icon }) => {
-            const active = pathActive(pathname, path)
-            return (
-              <NavLink
-                key={key}
-                to={path}
-                className={`app-nav-link ${active ? 'active' : ''}`}
-              >
-                <Icon className="app-nav-icon" aria-hidden />
-                <span>{label}</span>
-              </NavLink>
-            )
-          })}
-        </nav>
+        <div className="app-sidebar-scroll">
+          <nav className="app-nav" aria-label="Основное меню">
+            {primaryNavItems.map(({ key, label, path, Icon }) => {
+              const active = pathActive(pathname, path)
+              return (
+                <NavLink
+                  key={key}
+                  to={path}
+                  className={`app-nav-link app-nav-link--primary ${active ? 'active' : ''}`}
+                >
+                  <Icon className="app-nav-icon" aria-hidden />
+                  <span>{label}</span>
+                </NavLink>
+              )
+            })}
+            <div className="app-nav-divider" aria-hidden />
+            {navItems.map(({ key, label, path, Icon }) => {
+              const active = pathActive(pathname, path)
+              return (
+                <NavLink
+                  key={key}
+                  to={path}
+                  className={`app-nav-link ${active ? 'active' : ''}`}
+                >
+                  <Icon className="app-nav-icon" aria-hidden />
+                  <span>{label}</span>
+                </NavLink>
+              )
+            })}
+          </nav>
 
-        <div className="app-sidebar-language">
-          <div className="app-sidebar-language-label">
-            <Globe className="app-nav-icon-sm" aria-hidden />
-            <span>Язык</span>
+          <div className="app-sidebar-language">
+            <div className="app-sidebar-language-label">
+              <Globe className="app-nav-icon-sm" aria-hidden />
+              <span>Язык</span>
+            </div>
+            <select className="app-lang-select" disabled title="Скоро">
+              <option>Русский</option>
+            </select>
           </div>
-          <select className="app-lang-select" disabled title="Скоро">
-            <option>Русский</option>
-          </select>
         </div>
 
         <div className="app-sidebar-footer">
@@ -114,15 +125,13 @@ function AppShell({ currentCompany, children }) {
               <p className="app-user-name">Аккаунт</p>
               <p className="app-user-email">{user?.email}</p>
             </div>
-            <NavLink
-              to="/notifications"
-              className={({ isActive }) =>
-                `app-user-bell ${isActive ? 'active' : ''}`
-              }
+            <Link
+              to="/profile?tab=notifications"
+              className={`app-user-bell ${bellActive ? 'active' : ''}`}
               title="Уведомления"
             >
               <Bell size={18} />
-            </NavLink>
+            </Link>
           </div>
 
           <button

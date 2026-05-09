@@ -17,6 +17,13 @@ body {
   font-size: 14px;
 }
 
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
 .container {
   max-width: 320px;
   margin: 40px auto;
@@ -321,33 +328,77 @@ h2 {
 .app-header { background: white; border-bottom: 1px solid #dee2e6; }
 
 .app-shell {
-  min-height: 100vh;
+  --app-sidebar-w: 260px;
+  flex: 1;
+  min-height: 0;
   display: flex;
+  width: 100%;
+  overflow: hidden;
   background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 50%, #f3e8ff 100%);
 }
 
 .app-sidebar {
-  width: 260px;
+  width: var(--app-sidebar-w);
+  flex-shrink: 0;
   background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(8px);
   border-right: 1px solid #dbeafe;
   box-shadow: 0 8px 24px rgba(37, 99, 235, 0.08);
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.app-sidebar-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .app-brand {
-  padding: 24px 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 9px 12px;
   border-bottom: 1px solid #dbeafe;
+  flex-shrink: 0;
 }
 
-.app-brand h1 {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 700;
-  background: linear-gradient(90deg, #2563eb, #7c3aed);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.app-brand-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  border-radius: 10px;
+  padding: 6.5px 6px;
+  text-decoration: none;
+  outline: none;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app-brand-link:hover,
+.app-brand-link:focus-visible,
+.app-brand-link:active {
+  background: transparent;
+  box-shadow: none;
+}
+
+.app-brand-logo {
+  height: calc(132px / 1.25 / 1.25 * 1.2);
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: center;
+  flex-shrink: 0;
+  display: block;
 }
 
 .app-brand p {
@@ -394,9 +445,10 @@ h2 {
 }
 
 .app-sidebar-footer {
-  margin-top: auto;
+  flex-shrink: 0;
   padding: 16px;
   border-top: 1px solid #dbeafe;
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .app-company-label,
@@ -421,6 +473,7 @@ h2 {
 .app-main {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -474,9 +527,9 @@ h2 {
 }
 
 .app-sidebar-language {
-  padding: 0 1rem 0.75rem;
+  flex-shrink: 0;
+  padding: 0.75rem 1rem;
   border-top: 1px solid #dbeafe;
-  padding-top: 0.75rem;
 }
 
 .app-sidebar-language-label {
@@ -580,6 +633,18 @@ h2 {
 
   .app-sidebar {
     display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    z-index: 40;
+  }
+
+  .app-main {
+    margin-left: var(--app-sidebar-w);
   }
 
   .app-mobile-nav {
@@ -590,6 +655,10 @@ h2 {
 @media (max-width: 767px) {
   .app-sidebar {
     display: none;
+  }
+
+  .app-main {
+    margin-left: 0;
   }
 
   .app-mobile-nav {

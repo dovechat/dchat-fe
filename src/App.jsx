@@ -20,8 +20,7 @@ import CreateLine from './components/CreateLine'
 import LineDetails from './components/LineDetails'
 import LineSettings from './components/LineSettings'
 import Conversations from './components/Conversations'
-import NotificationHistory from './components/NotificationHistory'
-import NotificationSettings from './components/NotificationSettings'
+import Profile from './components/Profile'
 import ChannelAccount from './components/ChannelAccount'
 import { getChannelAccount } from './api/lines'
 import { useState } from 'react'
@@ -202,20 +201,9 @@ function App() {
         } />
 
 
-        <Route path="/notifications" element={
-          <div className="dashboard">
-            <header className="page-hero">
-              <h1 className="page-title-gradient">Уведомления</h1>
-              <p className="page-hero-sub">Настройки и история для текущей компании</p>
-            </header>
-            <div className="surface-card">
-              <NotificationSettings currentTenantId={currentTenant?.id} />
-            </div>
-            <div className="surface-card">
-              <NotificationHistory currentTenantId={currentTenant?.id} />
-            </div>
-          </div>
-        } />
+        <Route path="/profile" element={<Profile currentTenant={currentTenant} />} />
+
+        <Route path="/notifications" element={<Navigate to="/profile?tab=notifications" replace />} />
 
         <Route path="*" element={<Navigate to="/companies" replace />} />
       </Routes>
