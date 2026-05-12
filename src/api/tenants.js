@@ -1,21 +1,63 @@
 import apiClient from './client'
 
+/** Сессионные правки mock при офлайне (чтобы правки в формах отображались в списке и карточке). */
+const mockTenantOverrides = {}
+
 const MOCK_TENANTS = [
   {
     id: 'mock-tenant-1',
-    name: 'Mock Tenant 1',
+    name: 'ООО «Демо‑Торг»',
     locale: 'ru_RU',
     payment: 'acquiring',
     status: 'active',
+    address: 'г. Москва, ул. Примерная, д. 1, оф. 101',
+    phone: '+7 (495) 000-00-01',
+    email: 'office@demo-torg.example',
+    inn: '7700000000',
+    employee_count: 2,
+    banking_details: {
+      bank_name: 'ПАО «Примербанк»',
+      account_number: '40702810100000000001',
+      bic: '044525225',
+      corr_account: '30101810400000000225',
+      kpp: '770001001',
+      currency: 'RUB',
+      is_primary: true,
+    },
   },
   {
     id: 'mock-tenant-2',
-    name: 'Mock Tenant 2',
+    name: 'ИП Иванов',
     locale: 'en_US',
     payment: 'invoice',
     status: 'active',
-  }
+    address: '',
+    phone: '',
+    email: '',
+    inn: '',
+    employee_count: 0,
+    banking_details: null,
+  },
 ]
+
+function getMockTenantBase(id) {
+  return MOCK_TENANTS.find((t) => t.id === id) || MOCK_TENANTS[0]
+}
+
+function getMockTenantMerged(tenantId) {
+  const base = { ...getMockTenantBase(tenantId) }
+  const ov = { ...(mockTenantOverrides[tenantId] || {}) }
+  const merged = { ...base, ...ov }
+  if (Object.prototype.hasOwnProperty.call(ov, 'banking_details')) {
+    if (ov.banking_details === null) merged.banking_details = null
+    else merged.banking_details = { ...(base.banking_details || {}), ...ov.banking_details }
+  }
+  return merged
+}
+
+function mockTenantListMerged() {
+  return MOCK_TENANTS.map((t) => getMockTenantMerged(t.id))
+}
 
 // Получить список тенантов пользователя
 export const getTenants = async () => {
@@ -24,7 +66,7 @@ export const getTenants = async () => {
     return response.data
   } catch (error) {
     console.warn('Using mock tenants due to error:', error)
-    return MOCK_TENANTS
+    return mockTenantListMerged()
   }
 }
 
@@ -40,7 +82,16 @@ export const createTenant = async (data) => {
     return response.data
   } catch (error) {
     console.warn('Using mock createTenant due to error:', error)
-    return { ...data, id: `mock-${Math.random().toString(36).substr(2, 9)}` }
+    return {
+      ...data,
+      id: `mock-${Math.random().toString(36).substr(2, 9)}`,
+      address: data.address || '',
+      phone: data.phone || '',
+      email: data.email || '',
+      inn: data.inn || '',
+      employee_count: data.employee_count != null ? data.employee_count : 0,
+      banking_details: null,
+    }
   }
 }
 
@@ -51,7 +102,7 @@ export const getTenant = async (tenantId) => {
     return response.data
   } catch (error) {
     console.warn('Using mock getTenant due to error:', error)
-    return MOCK_TENANTS.find(t => t.id === tenantId) || MOCK_TENANTS[0]
+    return getMockTenantMerged(tenantId)
   }
 }
 
@@ -62,7 +113,8 @@ export const updateTenant = async (tenantId, data) => {
     return response.data
   } catch (error) {
     console.warn('Using mock updateTenant due to error:', error)
-    return { id: tenantId, ...data }
+    mockTenantOverrides[tenantId] = { ...(mockTenantOverrides[tenantId] || {}), ...data }
+    return getMockTenantMerged(tenantId)
   }
 }
 
@@ -103,6 +155,11 @@ export const updateBankingRu = async (tenantId, data) => {
     return response.data
   } catch (error) {
     console.warn('Using mock updateBankingRu due to error:', error)
-    return data
+    const prev = getMockTenantMerged(tenantId)
+    mockTenantOverrides[tenantId] = {
+      ...(mockTenantOverrides[tenantId] || {}),
+      banking_details: { ...(prev.banking_details || {}), ...data },
+    }
+    return getMockTenantMerged(tenantId)
   }
 }

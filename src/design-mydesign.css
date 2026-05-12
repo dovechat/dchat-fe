@@ -565,16 +565,55 @@
 .dc-perm-card {
   border: 1px solid #e5e7eb;
   border-radius: 0.75rem;
-  padding: 1rem;
+  padding: 0.75rem 1rem;
   background: #fff;
 }
 
-.dc-perm-employee {
+.dc-perm-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+}
+
+.dc-perm-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.dc-perm-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.dc-perm-email {
+  margin: 0;
+  font-weight: 600;
+  color: #111827;
+  font-size: 0.875rem;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dc-perm-aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.dc-perm-actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
   flex-wrap: wrap;
+  gap: 0.25rem;
+  justify-content: flex-end;
 }
 
 .dc-avatar {
@@ -591,6 +630,12 @@
   flex-shrink: 0;
 }
 
+.dc-avatar-sm {
+  width: 2rem;
+  height: 2rem;
+  font-size: 0.6875rem;
+}
+
 .dc-select {
   width: 100%;
   max-width: 24rem;
@@ -599,6 +644,67 @@
   border: 1px solid #e2e8f0;
   font-size: 0.875rem;
   background: #fff;
+}
+
+.dc-detail-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.dc-detail-toolbar .dc-btn {
+  flex: 0 0 auto;
+}
+
+.dc-detail-toolbar--plain {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0.75rem;
+}
+
+.dc-add-member-panel {
+  margin-top: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.125rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.dc-add-member-panel .form-group {
+  margin-bottom: 0.75rem;
+}
+
+.dc-add-member-panel .form-group:last-of-type {
+  margin-bottom: 0;
+}
+
+.dc-lines-panel {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  background: #fafafa;
+}
+
+.dc-lines-panel .dc-lines-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.dc-lines-panel label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: #374151;
+  cursor: pointer;
 }
 
 .dc-empty {

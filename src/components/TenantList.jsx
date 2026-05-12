@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getTenants, switchTenant } from '../api/tenants'
-import { getMembers } from '../api/members'
+import { getMembers, addMember, removeMember } from '../api/members'
 import { useAuth } from '../context/AuthContext'
+import Input from './ui/Input'
 import {
   Building2,
   Plus,
@@ -23,6 +24,11 @@ function TenantList({ currentTenantId, onTenantClick, onCreateClick, onTenantSel
   const [permTenantId, setPermTenantId] = useState('')
   const [members, setMembers] = useState([])
   const [membersLoading, setMembersLoading] = useState(false)
+  const [showAddMember, setShowAddMember] = useState(false)
+  const [addMemberEmail, setAddMemberEmail] = useState('')
+  const [addMemberRole, setAddMemberRole] = useState('member')
+  const [addMemberError, setAddMemberError] = useState('')
+  const [addMemberLoading, setAddMemberLoading] = useState(false)
 
   useEffect(() => {
     loadTenants()
@@ -34,24 +40,30 @@ function TenantList({ currentTenantId, onTenantClick, onCreateClick, onTenantSel
     }
   }, [tenants, permTenantId])
 
+  const loadPermMembers = useCallback(async () => {
+    if (!permTenantId) return
+    setMembersLoading(true)
+    try {
+      const data = await getMembers(permTenantId)
+      setMembers(Array.isArray(data) ? data : [])
+    } catch {
+      setMembers([])
+    } finally {
+      setMembersLoading(false)
+    }
+  }, [permTenantId])
+
   useEffect(() => {
     if (tab !== 'permissions' || !permTenantId) return
-    let cancelled = false
-    setMembersLoading(true)
-    getMembers(permTenantId)
-      .then((data) => {
-        if (!cancelled) setMembers(Array.isArray(data) ? data : [])
-      })
-      .catch(() => {
-        if (!cancelled) setMembers([])
-      })
-      .finally(() => {
-        if (!cancelled) setMembersLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [tab, permTenantId])
+    loadPermMembers()
+  }, [tab, permTenantId, loadPermMembers])
+
+  useEffect(() => {
+    setShowAddMember(false)
+    setAddMemberEmail('')
+    setAddMemberRole('member')
+    setAddMemberError('')
+  }, [permTenantId])
 
   const loadTenants = async () => {
     try {
@@ -94,6 +106,40 @@ function TenantList({ currentTenantId, onTenantClick, onCreateClick, onTenantSel
     const parts = name.split(/[\s@]+/).filter(Boolean)
     if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
     return name.slice(0, 2).toUpperCase() || '?'
+  }
+
+  const handleSubmitAddMember = async (e) => {
+    e.preventDefault()
+    setAddMemberError('')
+    const email = addMemberEmail.trim()
+    if (!email) {
+      setAddMemberError('Укажите email')
+      return
+    }
+    if (!permTenantId) return
+    setAddMemberLoading(true)
+    try {
+      await addMember(permTenantId, { email, role: addMemberRole })
+      setAddMemberEmail('')
+      setAddMemberRole('member')
+      setShowAddMember(false)
+      await loadPermMembers()
+    } catch (err) {
+      setAddMemberError(err?.message || 'Не удалось добавить сотрудника')
+    } finally {
+      setAddMemberLoading(false)
+    }
+  }
+
+  const handleRemovePermMember = async (userId) => {
+    if (!permTenantId || !userId) return
+    if (!window.confirm('Удалить сотрудника?')) return
+    try {
+      await removeMember(permTenantId, userId)
+      await loadPermMembers()
+    } catch (err) {
+      setError(err?.message || 'Не удалось удалить сотрудника')
+    }
   }
 
   if (loading) {
@@ -190,21 +236,25 @@ function TenantList({ currentTenantId, onTenantClick, onCreateClick, onTenantSel
                           <div className="dc-field-grid">
                             <div>
                               <p className="dc-muted-xs">Адрес</p>
-                              <p className="dc-strong">—</p>
+                              <p className="dc-strong">{tenant.address?.trim() ? tenant.address : '—'}</p>
                             </div>
                             <div>
                               <p className="dc-muted-xs">Телефон</p>
-                              <p className="dc-strong">—</p>
+                              <p className="dc-strong">{tenant.phone?.trim() ? tenant.phone : '—'}</p>
                             </div>
                             <div>
                               <p className="dc-muted-xs">Email</p>
-                              <p className="dc-strong">—</p>
+                              <p className="dc-strong">{tenant.email?.trim() ? tenant.email : '—'}</p>
+                            </div>
+                            <div>
+                              <p className="dc-muted-xs">ИНН</p>
+                              <p className="dc-strong">{tenant.inn?.trim() ? tenant.inn : '—'}</p>
                             </div>
                             <div>
                               <p className="dc-muted-xs">Сотрудники</p>
                               <p className="dc-strong" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                 <Users size={14} style={{ color: '#3b82f6' }} />
-                                —
+                                {tenant.employee_count != null ? tenant.employee_count : '—'}
                               </p>
                             </div>
                           </div>
@@ -303,56 +353,122 @@ function TenantList({ currentTenantId, onTenantClick, onCreateClick, onTenantSel
                   </select>
                 </div>
 
-                <button
-                  type="button"
-                  className="dc-btn dc-btn-primary"
-                  style={{ marginBottom: '1.25rem' }}
-                  onClick={() => navigate(`/companies/${permTenantId}`)}
-                >
-                  <Plus size={18} />
-                  Добавить сотрудника
-                </button>
+                <div className="dc-detail-toolbar dc-detail-toolbar--plain">
+                  <button
+                    type="button"
+                    className="dc-btn dc-btn-primary"
+                    onClick={() => {
+                      setShowAddMember((v) => !v)
+                      setAddMemberError('')
+                    }}
+                  >
+                    <Plus size={18} />
+                    {showAddMember ? 'Свернуть' : 'Добавить сотрудника'}
+                  </button>
+                </div>
+
+                {showAddMember && (
+                  <form className="dc-add-member-panel" onSubmit={handleSubmitAddMember}>
+                    <Input
+                      label="Email"
+                      type="email"
+                      value={addMemberEmail}
+                      onChange={(e) => setAddMemberEmail(e.target.value)}
+                      autoComplete="email"
+                      disabled={addMemberLoading}
+                    />
+                    <div className="form-group">
+                      <label className="dc-muted-xs" style={{ display: 'block', marginBottom: '0.35rem' }}>
+                        Роль
+                      </label>
+                      <select
+                        className="dc-select"
+                        value={addMemberRole}
+                        onChange={(e) => setAddMemberRole(e.target.value)}
+                        disabled={addMemberLoading}
+                      >
+                        <option value="member">Сотрудник</option>
+                        <option value="admin">Администратор</option>
+                      </select>
+                    </div>
+                    {addMemberError ? <p className="error" style={{ margin: '0 0 0.75rem' }}>{addMemberError}</p> : null}
+                    <div className="dc-detail-toolbar" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>
+                      <button
+                        type="button"
+                        className="dc-btn dc-btn-outline"
+                        disabled={addMemberLoading}
+                        onClick={() => {
+                          setShowAddMember(false)
+                          setAddMemberError('')
+                          setAddMemberEmail('')
+                          setAddMemberRole('member')
+                        }}
+                      >
+                        Отмена
+                      </button>
+                      <button type="submit" className="dc-btn dc-btn-primary" disabled={addMemberLoading}>
+                        {addMemberLoading ? '…' : 'Добавить'}
+                      </button>
+                    </div>
+                  </form>
+                )}
 
                 {membersLoading ? (
                   <p className="dc-muted">Загрузка…</p>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div className="dc-company-grid">
                     {members.length === 0 ? (
                       <p className="dc-muted">Нет сотрудников для выбранной компании.</p>
                     ) : (
-                      members.map((m) => (
-                        <div key={m.user_id || m.id} className="dc-perm-card">
-                          <div className="dc-perm-employee">
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                              <div className="dc-avatar">{initials(m)}</div>
-                              <div>
-                                <p style={{ margin: 0, fontWeight: 500, color: '#111827' }}>
-                                  {m.user?.email || m.email || m.user_id}
-                                </p>
-                                <p className="dc-muted-xs" style={{ margin: '0.15rem 0 0' }}>
-                                  {m.user?.email || '—'}
-                                </p>
+                      members.map((m) => {
+                        const email = m.user?.email || m.email || m.user_id || '—'
+                        return (
+                          <div key={m.user_id || m.id} className="dc-perm-card">
+                            <div className="dc-perm-row">
+                              <div className="dc-perm-main">
+                                <div className="dc-avatar dc-avatar-sm">{initials(m)}</div>
+                                <div className="dc-perm-text">
+                                  <p className="dc-perm-email" title={email}>
+                                    {email}
+                                  </p>
+                                  <p className="dc-muted-xs" style={{ margin: '0.2rem 0 0' }}>
+                                    {m.role === 'admin' ? 'Полный доступ' : 'Ограниченный доступ'}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="dc-perm-aside">
+                                <span
+                                  className={
+                                    m.role === 'admin' ? 'dc-badge dc-badge-green' : 'dc-badge dc-badge-neutral'
+                                  }
+                                >
+                                  {roleLabel(m.role)}
+                                </span>
+                                <div className="dc-perm-actions">
+                                  <button
+                                    type="button"
+                                    className="dc-btn-ghost"
+                                    aria-label="Изменить"
+                                    title="Скоро"
+                                    disabled
+                                  >
+                                    <Edit size={14} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="dc-btn-ghost dc-btn-ghost-danger"
+                                    aria-label="Удалить"
+                                    title="Удалить"
+                                    onClick={() => handleRemovePermMember(m.user_id || m.id)}
+                                  >
+                                    <Trash2 size={14} style={{ color: '#dc2626' }} />
+                                  </button>
+                                </div>
                               </div>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                              <span className="dc-badge">{roleLabel(m.role)}</span>
-                              <span
-                                className={
-                                  m.role === 'admin' ? 'dc-badge dc-badge-green' : 'dc-badge dc-badge-neutral'
-                                }
-                              >
-                                {m.role === 'admin' ? 'Полный доступ' : 'Ограниченный'}
-                              </span>
-                              <button type="button" className="dc-btn-ghost" aria-label="Изменить">
-                                <Edit size={14} />
-                              </button>
-                              <button type="button" className="dc-btn-ghost dc-btn-ghost-danger" aria-label="Удалить">
-                                <Trash2 size={14} style={{ color: '#dc2626' }} />
-                              </button>
-                            </div>
                           </div>
-                        </div>
-                      ))
+                        )
+                      })
                     )}
                   </div>
                 )}
